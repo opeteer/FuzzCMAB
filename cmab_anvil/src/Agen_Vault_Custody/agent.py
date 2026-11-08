@@ -44,7 +44,12 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
         arms = build_vault_custody_arm_catalog()
         super().__init__(rpc_client=rpc_client, arms=arms, revert_window=10)
 
-        repo_root = Path(__file__).resolve().parent.parent.parent
+        curr = Path(__file__).resolve()
+        repo_root = curr.parents[3] if len(curr.parents) > 3 else curr.parents[-1]
+        for p in curr.parents:
+            if (p / "anvil_env").exists():
+                repo_root = p
+                break
         self.deployed_json_path = (
             deployed_json_path
             if deployed_json_path is not None

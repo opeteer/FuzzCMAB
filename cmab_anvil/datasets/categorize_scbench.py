@@ -21,7 +21,12 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 
-SCBENCH_ROOT = Path("/home/opeteer/FuzzMaster/SC-Bench")
+DATASETS_DIR = Path(__file__).resolve().parent
+SCBENCH_ROOT = DATASETS_DIR / "SC-Bench"
+if not SCBENCH_ROOT.exists():
+    fallback = DATASETS_DIR.parent.parent / "SC-Bench"
+    if fallback.exists():
+        SCBENCH_ROOT = fallback
 DATASET_ROOT = SCBENCH_ROOT / "dataset"
 OUTPUT_ROOT = SCBENCH_ROOT / "categorized_dataset"
 

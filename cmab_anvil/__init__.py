@@ -2,13 +2,15 @@
 Contextual Multi-Armed Bandits (CMAB) Framework for Unprivileged Blockchain Agents on Anvil.
 
 Directory Structure:
-  - `algorithms/`         : Universal CMAB strategy templates (`LinUCBTemplate`, `DisjointLinUCB`,
-                            `HybridLinUCBTemplate`, `DiscountedLinUCBTemplate`, `DiscountedLinUCB`)
-  - `common/`             : Universal Anvil JSON-RPC client & base unprivileged environment
-  - `Agen_Vault_Custody/` : Domain-specific CMAB agent for Custody Vault & ERC-20 contracts
+  - `src/`      : Core source code (algorithms, common, Agen_Vault_Custody)
+  - `tests/`    : Simulation and experiment runner scripts
+  - `datasets/` : Datasets (SC-Bench and categorization scripts)
+  - `results/`  : Simulation outputs, checkpoints, reports, and charts
 """
 
-from .algorithms import (
+import sys
+from .src import algorithms, common, Agen_Vault_Custody
+from .src.algorithms import (
     BaseCMABPolicy,
     ArmSelectionResult,
     LinUCBTemplate,
@@ -17,18 +19,23 @@ from .algorithms import (
     DiscountedLinUCBTemplate,
     DiscountedLinUCB,
 )
-from .common import (
+from .src.common import (
     UnprivilegedAnvilClient,
     BaseArmSpec,
     BaseUnprivilegedBanditEnv,
     StepTransition,
 )
-from .Agen_Vault_Custody import (
+from .src.Agen_Vault_Custody import (
     VaultCustodyEnv,
     VaultCustodyCMABAgent,
     CONTEXT_DIM,
     FEATURE_NAMES,
 )
+
+# Register backward-compatibility aliases so `cmab_anvil.algorithms`, etc. resolve directly
+sys.modules[f"{__name__}.algorithms"] = algorithms
+sys.modules[f"{__name__}.common"] = common
+sys.modules[f"{__name__}.Agen_Vault_Custody"] = Agen_Vault_Custody
 
 __all__ = [
     "BaseCMABPolicy",
@@ -46,4 +53,7 @@ __all__ = [
     "VaultCustodyCMABAgent",
     "CONTEXT_DIM",
     "FEATURE_NAMES",
+    "algorithms",
+    "common",
+    "Agen_Vault_Custody",
 ]

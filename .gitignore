@@ -13,6 +13,9 @@ anvil_env/cache/
 # CMAB runtime logs & PID
 cmab_anvil/*.log
 cmab_anvil/.benchmark.pid
+cmab_anvil/results/*.log
+cmab_anvil/results/.benchmark.pid
 
 # External benchmark datasets (local clone)
 /SC-Bench/
+cmab_anvil/datasets/SC-Bench/

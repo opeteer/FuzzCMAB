@@ -21,10 +21,22 @@ from pathlib import Path
 from typing import Dict, List, Any, Tuple, Optional
 import numpy as np
 
-# Ensure cmab_anvil is importable
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# Ensure repository root and cmab_anvil modules are importable
+curr = Path(__file__).resolve()
+REPO_ROOT = curr.parents[2] if len(curr.parents) > 2 else curr.parents[-1]
+for p in curr.parents:
+    if (p / "anvil_env").exists():
+        REPO_ROOT = p
+        break
+
+CMAB_ROOT = REPO_ROOT / "cmab_anvil"
+RESULTS_DIR = CMAB_ROOT / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+if str(CMAB_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(CMAB_ROOT / "src"))
 
 from cmab_anvil.algorithms.linucb import DisjointLinUCB
 from cmab_anvil.algorithms.discounted_linucb import DiscountedLinUCB
@@ -51,7 +63,9 @@ PEER_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 AGENT_PK = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"     # Account #2 (Protocol Member EOA)
 AGENT_ADDR = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 
-DATASET_DIR = REPO_ROOT / "SC-Bench" / "categorized_dataset" / "Vault_and_Liquidity"
+DATASET_DIR = CMAB_ROOT / "datasets" / "SC-Bench" / "categorized_dataset" / "Vault_and_Liquidity"
+if not DATASET_DIR.exists():
+    DATASET_DIR = REPO_ROOT / "SC-Bench" / "categorized_dataset" / "Vault_and_Liquidity"
 MOCK_TOKEN_SOL = REPO_ROOT / "anvil_env" / "src" / "MockToken.sol"
 MAX_UINT256 = "115792089237316195423570985008687907853269984665640564039457584007913129639935"
 
@@ -1080,10 +1094,10 @@ def run_benchmark_for_scenario(
     elapsed = time.time() - t0
     regime_suffix = "_no_regime" if no_regime else ""
     fname = f"scbench_{scenario}_{gas_mode}_{event_mode}{regime_suffix}_results.json"
-    out_path = REPO_ROOT / "cmab_anvil" / fname
+    out_path = RESULTS_DIR / fname
     out_path.write_text(json.dumps(all_results, indent=2))
     if scenario == "fixed" and gas_mode == "static" and event_mode == "stochastic" and not no_regime:
-        legacy_path = REPO_ROOT / "cmab_anvil" / "scbench_10contracts_comparison.json"
+        legacy_path = RESULTS_DIR / "scbench_10contracts_comparison.json"
         legacy_path.write_text(json.dumps(all_results, indent=2))
     print("\n" + "=" * 96)
     print(f"🏁 SELESAI ({scenario.upper()} - {gas_mode.upper()} - {event_mode.upper()}{' - NO_REGIME' if no_regime else ''}) DALAM {elapsed:.2f} DETIK | Telemetri disimpan ke: {out_path}")

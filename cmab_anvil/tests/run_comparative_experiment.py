@@ -12,15 +12,28 @@ import sys
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+curr = Path(__file__).resolve()
+REPO_ROOT = curr.parents[2] if len(curr.parents) > 2 else curr.parents[-1]
+for p in curr.parents:
+    if (p / "anvil_env").exists():
+        REPO_ROOT = p
+        break
+
+CMAB_ROOT = REPO_ROOT / "cmab_anvil"
+RESULTS_DIR = CMAB_ROOT / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+if str(CMAB_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(CMAB_ROOT / "src"))
 
 SETUP_SCRIPT = REPO_ROOT / "anvil_env" / "scripts" / "setup_fair_agent.sh"
 RPC_URL = "http://127.0.0.1:8545"
 
-LINUCB_OUT = REPO_ROOT / "cmab_anvil" / "linucb_simulation_results.json"
-DLINUCB_OUT = REPO_ROOT / "cmab_anvil" / "d_linucb_simulation_results.json"
+LINUCB_OUT = RESULTS_DIR / "linucb_simulation_results.json"
+DLINUCB_OUT = RESULTS_DIR / "d_linucb_simulation_results.json"
+SIM_SCRIPT = CMAB_ROOT / "tests" / "run_cmab_simulation.py"
 
 
 def run_cmd(cmd: str, desc: str) -> None:
@@ -47,7 +60,7 @@ def main():
     run_cmd(f'bash "{SETUP_SCRIPT}" "{RPC_URL}"', "Deploy Kontrak Bersih untuk LinUCB")
 
     run_cmd(
-        f'python3 "{REPO_ROOT}/cmab_anvil/run_cmab_simulation.py" '
+        f'python3 "{SIM_SCRIPT}" '
         f'--algorithm linucb --alpha 0.50 --rounds 10 --output-log "{LINUCB_OUT}"',
         "Menjalankan Simulasi 10 Putaran LinUCB",
     )
@@ -61,7 +74,7 @@ def main():
     run_cmd(f'bash "{SETUP_SCRIPT}" "{RPC_URL}"', "Deploy Kontrak Bersih untuk D-LinUCB")
 
     run_cmd(
-        f'python3 "{REPO_ROOT}/cmab_anvil/run_cmab_simulation.py" '
+        f'python3 "{SIM_SCRIPT}" '
         f'--algorithm d-linucb --gamma 0.85 --alpha 0.50 --rounds 10 --output-log "{DLINUCB_OUT}"',
         "Menjalankan Simulasi 10 Putaran Discounted LinUCB (gamma=0.85)",
     )

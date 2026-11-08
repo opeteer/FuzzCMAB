@@ -9,9 +9,21 @@ import json
 from pathlib import Path
 import sys
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+curr = Path(__file__).resolve()
+REPO_ROOT = curr.parents[2] if len(curr.parents) > 2 else curr.parents[-1]
+for p in curr.parents:
+    if (p / "anvil_env").exists():
+        REPO_ROOT = p
+        break
+
+CMAB_ROOT = REPO_ROOT / "cmab_anvil"
+RESULTS_DIR = CMAB_ROOT / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+if str(CMAB_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(CMAB_ROOT / "src"))
 
 from cmab_anvil.Agen_Vault_Custody import (
     VaultCustodyEnv,
@@ -83,7 +95,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-log",
         type=str,
-        default=str(REPO_ROOT / "cmab_anvil" / "cmab_simulation_results.json"),
+        default=str(RESULTS_DIR / "cmab_simulation_results.json"),
         help="Path to save simulation telemetry JSON",
     )
     return parser.parse_args()
