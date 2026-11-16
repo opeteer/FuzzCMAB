@@ -1,35 +1,35 @@
 """
-Context Space Modeling (X_Vault subset R^10) for Agen_Vault_Custody.
+Context Space Modeling (X_Vault subset R^10) for Agen_Vault_Custody (Refactored 10D Optimized).
 
-Re-models FuzzMaster's 28-dimensional internal REVM state into a 10-dimensional
-publicly observable on-chain context vector x_t in R^{10} queried strictly via
-read-only JSON-RPC calls (eth_getBalance, eth_call, eth_getCode, eth_blockNumber).
+Implements a scale-invariant, magic-number-free, and CBwK-compliant 10-dimensional
+context vector x_t in R^{10} combining relative on-chain financial ratios with
+Hybrid Greybox/Black-box EVM execution trace signals (SSTORE & SLOAD->SSTORE waypoints).
 """
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 import numpy as np
 
 CONTEXT_DIM: int = 10
 
 FEATURE_NAMES: List[str] = [
     "x0_bias",                     # Constant intercept = 1.0
-    "x1_vault_eth_norm",           # Vault ETH balance normalized by 15 ETH reference cap
-    "x2_vault_total_dep_norm",     # Vault recorded totalDeposited normalized by 15 ETH
-    "x3_vault_drain_threshold",    # Indicator/ratio: Vault ETH >= 5 ETH (unlocks emergencyWithdraw condition)
-    "x4_agent_vault_stake_norm",   # Agent's deposited balance inside Vault (unlocks withdraw)
-    "x5_agent_liquid_eth_norm",    # Agent's liquid EOA ETH balance normalized by initial 5 ETH budget
-    "x6_solvency_gap_ratio",       # (Vault_ETH - totalDeposited) / max(totalDeposited, 1.0)
-    "x7_agent_token_share",        # Agent's MockToken balance normalized by 1,000 MCK scale
-    "x8_recent_revert_rate",       # Moving average revert rate of agent's recent transactions
-    "x9_vault_code_alive",         # 1.0 if VulnerableVault bytecode is intact, 0.0 if selfdestructed
+    "x1_vault_liquidity_ratio",    # Vault_ETH / (Vault_ETH + Agent_ETH + 1e-5) in [0.0, 1.0]
+    "x2_claim_liability_ratio",    # Total_Deposited / (Vault_ETH + Total_Deposited + 1e-5) in [0.0, 1.0]
+    "x3_solvency_gap_ratio",       # clip((Vault_ETH - Total_Deposited) / max(Total_Deposited, 1.0), -1.0, 1.0)
+    "x4_agent_stake_ratio",        # clip(Agent_Vault_Stake / (Total_Deposited + 1e-5), 0.0, 1.0)
+    "x5_deposit_eligibility",      # min(1.0, Agent_EOA_ETH / Min_Deposit_Requirement) in [0.0, 1.0]
+    "x6_sstore_execution_flag",    # 1.0 if last transaction triggered SSTORE (storage write), else 0.0
+    "x7_dataflow_waypoint_flag",   # 1.0 if SSTORE modified a slot previously read via SLOAD, else 0.0
+    "x8_recent_revert_rate",       # Moving average revert rate of agent's recent transactions in [0.0, 1.0]
+    "x9_vault_code_alive",         # 1.0 if target contract bytecode is intact, 0.0 if selfdestructed
 ]
 
 
 @dataclass
 class OnChainContextSnapshot:
     """
-    Raw public on-chain state observed by Agen_Vault_Custody on Anvil at round t.
+    On-chain state and EVM execution trace snapshot observed by Agen_Vault_Custody at round t.
     """
     block_number: int
     vault_eth_balance: float
@@ -41,53 +41,95 @@ class OnChainContextSnapshot:
     vault_is_locked: bool
     vault_code_alive: bool
     recent_revert_rate: float
+    sstore_executed: bool = False
+    dataflow_waypoint: bool = False
+    min_deposit_requirement: float = 0.25
 
 
 class PublicContextExtractor:
     """
-    Maps a public `OnChainContextSnapshot` into a bounded context vector x_t in R^{10}.
+    Maps an `OnChainContextSnapshot` into a scale-invariant, collinearity-free
+    10-dimensional context vector x_t in R^{10} without hardcoded magic numbers.
     """
 
-    def __init__(self, vault_cap_eth: float = 15.0, agent_init_eth: float = 5.0):
-        self.vault_cap_eth = max(vault_cap_eth, 1e-6)
-        self.agent_init_eth = max(agent_init_eth, 1e-6)
+    EPS: float = 1e-5
+
+    def __init__(
+        self,
+        min_deposit_eth: float = 0.25,
+        vault_cap_eth: Optional[float] = None,
+        agent_init_eth: Optional[float] = None,
+    ):
+        # `vault_cap_eth` and `agent_init_eth` retained as optional kwargs for backward compatibility
+        self.min_deposit_eth = max(min_deposit_eth, self.EPS)
 
     def to_vector(self, snap: OnChainContextSnapshot) -> np.ndarray:
+        vault_eth = max(0.0, float(snap.vault_eth_balance))
+        total_dep = max(0.0, float(snap.vault_total_deposited))
+        agent_stake = max(0.0, float(snap.agent_vault_balance))
+        agent_eth = max(0.0, float(snap.agent_eoa_eth_balance))
+
+        # x0: Constant intercept term for linear UCB regression
         x0_bias = 1.0
-        x1_vault_eth = float(np.clip(snap.vault_eth_balance / self.vault_cap_eth, 0.0, 2.0))
-        x2_total_dep = float(np.clip(snap.vault_total_deposited / self.vault_cap_eth, 0.0, 2.0))
 
-        # Smooth indicator around the 5 ETH threshold in VulnerableVault.sol line 53
-        x3_drain_thresh = (
-            1.0 if snap.vault_eth_balance >= 5.0 else (snap.vault_eth_balance / 5.0)
+        # x1: Relative Vault Liquidity Ratio (scale-free in [0.0, 1.0])
+        x1_vault_liq_ratio = float(
+            np.clip(vault_eth / (vault_eth + agent_eth + self.EPS), 0.0, 1.0)
         )
 
-        # Agent's own stake inside Vault (critical context for withdraw vs deposit)
-        x4_agent_stake = float(np.clip(snap.agent_vault_balance / self.agent_init_eth, 0.0, 2.0))
-        x5_agent_liquid = float(np.clip(snap.agent_eoa_eth_balance / self.agent_init_eth, 0.0, 3.0))
-
-        denom = max(snap.vault_total_deposited, 1.0)
-        x6_solvency_gap = float(
-            np.clip((snap.vault_eth_balance - snap.vault_total_deposited) / denom, -1.0, 1.0)
+        # x2: Relative Claim Liability Ratio (scale-free in [0.0, 1.0])
+        x2_liability_ratio = float(
+            np.clip(total_dep / (vault_eth + total_dep + self.EPS), 0.0, 1.0)
         )
 
-        x7_token_share = float(np.clip(snap.agent_token_balance / 1000.0, 0.0, 1.0))
+        # x3: Solvency Gap Ratio in [-1.0, 1.0] (negative indicates insolvency / drain)
+        denom_solvency = max(total_dep, 1.0)
+        x3_solvency_gap = float(
+            np.clip((vault_eth - total_dep) / denom_solvency, -1.0, 1.0)
+        )
+
+        # x4: Agent's proportional stake share inside the Vault in [0.0, 1.0]
+        # Fallback: if total_dep is not tracked by the contract (0.0) but agent_stake > 0,
+        # normalize against (vault_eth + agent_stake + EPS).
+        stake_denom = (
+            (total_dep + self.EPS)
+            if total_dep >= agent_stake and total_dep > 0.0
+            else (max(vault_eth, agent_stake) + self.EPS)
+        )
+        x4_agent_stake_ratio = float(np.clip(agent_stake / stake_denom, 0.0, 1.0))
+
+        # x5: Instant Deposit Eligibility Ratio in [0.0, 1.0] (CBwK-compliant feasibility signal,
+        # decoupled from global gas budget trajectory)
+        req_dep = max(
+            float(getattr(snap, "min_deposit_requirement", self.min_deposit_eth)),
+            self.EPS,
+        )
+        x5_deposit_eligibility = float(np.clip(min(1.0, agent_eth / req_dep), 0.0, 1.0))
+
+        # x6: EVM SSTORE Execution Flag (1.0 if last tx wrote persistent storage, else 0.0)
+        x6_sstore_flag = 1.0 if getattr(snap, "sstore_executed", False) else 0.0
+
+        # x7: SMARTIAN / ItyFuzz Dataflow Waypoint Flag (1.0 if SSTORE modified a previously SLOADed slot)
+        x7_waypoint_flag = 1.0 if getattr(snap, "dataflow_waypoint", False) else 0.0
+
+        # x8: Moving-average transaction revert rate in [0.0, 1.0]
         x8_revert_rate = float(np.clip(snap.recent_revert_rate, 0.0, 1.0))
+
+        # x9: Contract bytecode liveness indicator (0.0 if selfdestructed)
         x9_code_alive = 1.0 if snap.vault_code_alive else 0.0
 
         return np.array(
             [
                 x0_bias,
-                x1_vault_eth,
-                x2_total_dep,
-                x3_drain_thresh,
-                x4_agent_stake,
-                x5_agent_liquid,
-                x6_solvency_gap,
-                x7_token_share,
+                x1_vault_liq_ratio,
+                x2_liability_ratio,
+                x3_solvency_gap,
+                x4_agent_stake_ratio,
+                x5_deposit_eligibility,
+                x6_sstore_flag,
+                x7_waypoint_flag,
                 x8_revert_rate,
                 x9_code_alive,
             ],
             dtype=np.float64,
         )
-

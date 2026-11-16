@@ -27,7 +27,7 @@ if [ -f "${PID_FILE}" ]; then
 fi
 
 echo "[*] Starting Anvil simulator on port ${PORT}..."
-ANVIL_ARGS=("--port" "${PORT}" "--chain-id" "31337" "--accounts" "10" "--balance" "10000")
+ANVIL_ARGS=("--port" "${PORT}" "--chain-id" "31337" "--accounts" "10" "--balance" "10000" "--steps-tracing")
 
 if [ -n "${FORK_URL}" ]; then
     echo "[*] Forking remote state from: ${FORK_URL}"

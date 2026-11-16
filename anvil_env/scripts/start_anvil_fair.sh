@@ -28,6 +28,7 @@ ANVIL_ARGS=(
     "--hardfork" "cancun"
     "--accounts" "10"
     "--balance" "100"
+    "--steps-tracing"
 )
 
 nohup "${ANVIL_BIN}" "${ANVIL_ARGS[@]}" > "${LOG_FILE}" 2>&1 &

@@ -56,6 +56,7 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
             else repo_root / "anvil_env" / "deployed_addresses.json"
         )
         self.context_extractor = PublicContextExtractor(
+            min_deposit_eth=0.25,
             vault_cap_eth=15.0,
             agent_init_eth=agent_ref_budget_eth,
         )
@@ -63,6 +64,8 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
 
         self.vault_address: str = ""
         self.token_address: str = ""
+        self.last_sstore_flag: bool = False
+        self.last_waypoint_flag: bool = False
         self._load_contract_addresses()
 
     def _load_contract_addresses(self) -> None:
@@ -74,6 +77,23 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
         data = json.loads(self.deployed_json_path.read_text())
         self.vault_address = data["VulnerableVault"]
         self.token_address = data["MockToken"]
+
+        # Tier 2: Auto-register Foundry compiled ABI if available for dynamic introspection
+        vault_abi_path = (
+            self.deployed_json_path.parent
+            / "out"
+            / "VulnerableVault.sol"
+            / "VulnerableVault.json"
+        )
+        if vault_abi_path.exists():
+            try:
+                artifact = json.loads(vault_abi_path.read_text())
+                if isinstance(artifact.get("abi"), list):
+                    self.rpc_client.register_contract_abi(
+                        self.vault_address, artifact["abi"]
+                    )
+            except Exception:
+                pass
 
     def verify_unprivileged_standing(self) -> Dict[str, str]:
         info = self.rpc_client.verify_not_owner(
@@ -94,17 +114,28 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
         block_number = c.get_block_number()
         vault_eth = c.get_eth_balance(self.vault_address)
         agent_eoa_eth = c.get_eth_balance(c.agent_address)
-        vault_total_dep = c.call_uint256_ether(
-            self.vault_address, "totalDeposited()(uint256)"
+
+        # Unified 4-Tier resolution (Dynamic ABI -> Multi-Standard ABI -> Raw Storage Slot Inference)
+        vault_total_dep = c.query_total_deposited(
+            self.vault_address, vault_eth_hint=vault_eth
         )
-        agent_vault_bal = c.call_uint256_ether(
-            self.vault_address, "balances(address)(uint256)", c.agent_address
+
+        # Unified 4-Tier resolution (Dynamic ABI -> Multi-Standard ABI -> Keccak256 Mapping Slot Inference)
+        agent_vault_bal = c.query_agent_stake(
+            self.vault_address, c.agent_address
         )
+
         solv_ok, solv_val = c.call_bool(self.vault_address, "check_solvency()(bool)")
+        if not solv_ok:
+            # Generic solvency check fallback when `check_solvency()` is absent
+            solv_val = (vault_eth + 1e-9 >= vault_total_dep)
+
         _, locked_val = c.call_bool(self.vault_address, "isLocked()(bool)")
         code_alive = c.get_code_alive(self.vault_address)
-        agent_token_bal = c.call_uint256_ether(
-            self.token_address, "balanceOf(address)(uint256)", c.agent_address
+        agent_token_bal = c.call_uint256_ether_with_fallbacks(
+            self.token_address,
+            ["balanceOf(address)(uint256)"],
+            c.agent_address,
         )
 
         return OnChainContextSnapshot(
@@ -114,10 +145,13 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
             agent_vault_balance=agent_vault_bal,
             agent_eoa_eth_balance=agent_eoa_eth,
             agent_token_balance=agent_token_bal,
-            vault_is_solvent=(solv_ok and solv_val),
+            vault_is_solvent=solv_val,
             vault_is_locked=locked_val,
             vault_code_alive=code_alive,
             recent_revert_rate=self.recent_revert_rate,
+            sstore_executed=self.last_sstore_flag,
+            dataflow_waypoint=self.last_waypoint_flag,
+            min_deposit_requirement=self.context_extractor.min_deposit_eth,
         )
 
     def observe_context(self) -> Tuple[np.ndarray, OnChainContextSnapshot]:
@@ -139,12 +173,27 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
         elif arm.function_sig == "transfer(address,uint256)":
             call_args.extend([self.vault_address, str(int(50 * 1e18))])
 
-        return self.rpc_client.send_eoa_transaction(
+        # Snapshot target storage slots before executing the transaction
+        pre_storage = self.rpc_client.snapshot_contract_storage(target_addr)
+
+        tx_ok, tx_info = self.rpc_client.send_eoa_transaction(
             target_address=target_addr,
             function_sig=arm.function_sig,
             call_args=call_args,
             eth_value=arm.eth_value,
         )
+
+        # Hybrid Greybox Opcode Trace + Public Storage Slot Diffing for x6 & x7
+        tx_hash = self.rpc_client.extract_tx_hash(tx_info) if tx_ok else None
+        sstore_val, waypoint_val = self.rpc_client.trace_transaction_dataflow(
+            tx_hash=tx_hash,
+            contract_address=target_addr,
+            pre_storage=pre_storage,
+        )
+        self.last_sstore_flag = bool(sstore_val >= 0.5)
+        self.last_waypoint_flag = bool(waypoint_val >= 0.5)
+
+        return tx_ok, tx_info
 
     def evaluate_reward(
         self,
