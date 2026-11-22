@@ -159,3 +159,30 @@ def test_comparative_policy_evaluation():
         assert summaries["D-LinCBwK"].cumulative_dynamic_regret < summaries["LinUCB"].cumulative_dynamic_regret
         assert cmp_plot.exists()
 
+
+def test_early_stopping_bankruptcy_regret_penalty():
+    """
+    Verify Persamaan (3.22) and Sub-bab 3.6 Butir 1:
+    When a policy stops early at tau < T due to budget exhaustion,
+    for rounds t in {tau + 1, ..., T} it receives r_t(a_t) = 0.0 and incurs full regret r_t^*.
+    """
+    ev = DynamicRegretEvaluator(
+        context_dim=4,
+        n_arms=2,
+        initial_budget=0.05,
+        oracle_reward_ceiling=1.00,
+    )
+    # Policy only survived tau = 2 rounds out of T = 5
+    short_logs = [
+        {"round": 1, "arm_id": 0, "reward": 0.50, "gas_cost": 0.03, "sstore_executed": True},
+        {"round": 2, "arm_id": 1, "reward": 0.50, "gas_cost": 0.02, "sstore_executed": True},
+    ]
+    summary = ev.evaluate_trajectory(short_logs, horizon_t=5)
+    assert summary.total_rounds == 5
+    assert math.isclose(summary.cumulative_reward, 1.00, rel_tol=1e-5)
+    # Rounds 3, 4, 5 each incur full regret r_t^* = 1.00
+    assert math.isclose(summary.trajectory[2].reward, 0.0)
+    assert math.isclose(summary.trajectory[2].instantaneous_regret, 1.00)
+    assert math.isclose(summary.cumulative_dynamic_regret, 0.50 + 0.50 + 1.00 + 1.00 + 1.00, rel_tol=1e-5)
+
+

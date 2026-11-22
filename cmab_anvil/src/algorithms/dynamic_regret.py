@@ -89,6 +89,10 @@ class DynamicRegretSummary:
     average_gas_cost: float
     steps: List[DynamicRegretStep] = field(default_factory=list)
 
+    @property
+    def trajectory(self) -> List[DynamicRegretStep]:
+        return self.steps
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert summary into serializable dictionary."""
         return {
@@ -342,9 +346,14 @@ class DynamicRegretEvaluator:
         self,
         round_logs: List[Dict[str, Any]],
         optimal_rewards: Optional[List[float]] = None,
+        horizon_t: Optional[int] = None,
     ) -> DynamicRegretSummary:
         """
-        Evaluate full interaction trajectory from round logs.
+        Evaluate full interaction trajectory from round logs (Persamaan 3.22).
+
+        If the policy experienced premature budget exhaustion at stopping time tau < T
+        (where T = `horizon_t`), then for all remaining rounds t in {tau + 1, ..., T},
+        the policy receives r_t(a_t) = 0.0 and incurs full regret r_t^* (Halaman 47-48).
 
         Parameters
         ----------
@@ -352,13 +361,16 @@ class DynamicRegretEvaluator:
             Sequential round log entries (e.g. from `run_policy_on_contract`).
         optimal_rewards : Optional[List[float]]
             Optional counterfactual optimal rewards per round.
+        horizon_t : Optional[int]
+            Planned total horizon T. If provided and > len(round_logs), pads post-bankruptcy
+            rounds tau+1..T with r_t(a_t) = 0.0.
         """
         self.reset()
         for idx, entry in enumerate(round_logs):
             t = entry.get("round", idx + 1)
             arm_id = entry.get("arm_id", 0)
             rew = float(entry.get("reward", 0.0))
-            cost = float(entry.get("burned_eth", entry.get("gas_cost", 0.0)))
+            cost = float(entry.get("cost_eth", entry.get("burned_eth", entry.get("gas_cost", 0.0))))
             sstore = bool(entry.get("sstore_executed", False))
 
             r_opt = optimal_rewards[idx] if (optimal_rewards and idx < len(optimal_rewards)) else None
@@ -370,6 +382,22 @@ class DynamicRegretEvaluator:
                 sstore_executed=sstore,
                 gas_cost=cost,
             )
+
+        # Handle premature stopping tau < T (Persamaan 3.22 & Sub-bab 3.6 Butir 1):
+        # For t in {tau + 1, ..., T}, r_t(a_t) = 0 and instantaneous regret = r_t^*
+        tau = len(round_logs)
+        if horizon_t is not None and horizon_t > tau:
+            for idx in range(tau, horizon_t):
+                t = idx + 1
+                r_opt = optimal_rewards[idx] if (optimal_rewards and idx < len(optimal_rewards)) else None
+                self.step(
+                    round_idx=t,
+                    chosen_arm=-1,
+                    reward=0.0,
+                    optimal_reward=r_opt,
+                    sstore_executed=False,
+                    gas_cost=0.0,
+                )
 
         return self.get_summary()
 
@@ -526,13 +554,33 @@ def compare_policies_dynamic_regret(
     n_arms: int,
     initial_budget: float = 1.0,
     optimal_rewards: Optional[List[float]] = None,
+    oracle_reward_ceiling: float = 1.00,
+    horizon_t: Optional[int] = None,
     plot_save_path: Optional[Union[str, Path]] = None,
 ) -> Dict[str, DynamicRegretSummary]:
     """
     Perform comparative Dynamic Regret evaluation across multiple CMAB policies
-    (e.g., LinUCB vs D-LinUCB vs D-LinCBwK).
+    (e.g., UniformRandom, LinUCB, D-LinUCB, LinCBwK, D-LinCBwK).
     """
     import matplotlib.pyplot as plt
+
+    max_len = max((len(logs) for logs in policies_round_logs.values()), default=0)
+    effective_horizon = horizon_t if (horizon_t is not None and horizon_t >= max_len) else max_len
+
+    # If optimal_rewards is not provided, compute CRN cross-policy envelope r_t^* (Sub-bab 3.6 Butir 1)
+    if optimal_rewards is None and effective_horizon > 0:
+        crn_envelope: List[float] = []
+        for idx in range(effective_horizon):
+            round_vals = [
+                float(logs[idx].get("reward", 0.0))
+                for logs in policies_round_logs.values()
+                if idx < len(logs)
+            ]
+            # Under CRN, the instantaneous oracle achieves at least the best observed reward across
+            # policies at round t (or prerequisite state shaping ceiling 0.50 when all policies reverted)
+            best_obs = max(round_vals) if round_vals else 0.50
+            crn_envelope.append(max(0.50, best_obs))
+        optimal_rewards = crn_envelope
 
     summaries: Dict[str, DynamicRegretSummary] = {}
     evaluators: Dict[str, DynamicRegretEvaluator] = {}
@@ -542,9 +590,14 @@ def compare_policies_dynamic_regret(
             context_dim=context_dim,
             n_arms=n_arms,
             initial_budget=initial_budget,
+            oracle_reward_ceiling=oracle_reward_ceiling,
             policy_name=name,
         )
-        summary = ev.evaluate_trajectory(logs, optimal_rewards=optimal_rewards)
+        summary = ev.evaluate_trajectory(
+            logs,
+            optimal_rewards=optimal_rewards,
+            horizon_t=effective_horizon,
+        )
         summaries[name] = summary
         evaluators[name] = ev
 

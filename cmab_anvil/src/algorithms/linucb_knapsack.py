@@ -74,9 +74,12 @@ class LinUCBwK(BaseCMABPolicy):
         beta: float = 0.0,
         l2_lambda: float = 1.0,
         initial_lambda: float = 1.0,
-        min_cost: float = 0.001,
+        min_cost: float = 0.0005,
+        max_cost: Optional[float] = None,
+        min_budget_threshold: float = 1e-6,
+        g_max: float = 5.0,
         use_sherman_morrison: bool = True,
-        dual_update_mode: str = "estimated",
+        dual_update_mode: str = "observed",
         lambda_min: float = 1e-4,
         lambda_max: float = 1e4,
         custom_eta: Optional[float] = None,
@@ -132,8 +135,8 @@ class LinUCBwK(BaseCMABPolicy):
             raise ValueError("beta must be non-negative.")
         if l2_lambda <= 0.0:
             raise ValueError("l2_lambda must be strictly positive.")
-        if initial_lambda <= 0.0:
-            raise ValueError("initial_lambda must be strictly positive for exponential updates.")
+        if initial_lambda < 0.0:
+            raise ValueError("initial_lambda must be non-negative.")
         if min_cost <= 0.0:
             raise ValueError("min_cost must be strictly positive.")
 
@@ -146,9 +149,12 @@ class LinUCBwK(BaseCMABPolicy):
         self.initial_lambda = float(initial_lambda)
         self.lambda_t = float(initial_lambda)
         self.min_cost = float(min_cost)
+        self.max_cost = float(max_cost) if max_cost is not None else max(float(initial_budget), 10.0)
+        self.min_budget_threshold = float(min_budget_threshold)
+        self.g_max = float(g_max)
         self.use_sherman_morrison = bool(use_sherman_morrison)
         self.dual_update_mode = str(dual_update_mode)
-        self.lambda_min = float(lambda_min)
+        self.lambda_min = 0.0 if initial_lambda == 0.0 else float(lambda_min)
         self.lambda_max = float(lambda_max)
         self.custom_eta = float(custom_eta) if custom_eta is not None else None
         self.rng = np.random.default_rng(seed)
@@ -218,8 +224,8 @@ class LinUCBwK(BaseCMABPolicy):
     # -------------------------------------------------------------------------
     def estimate_reward(self, arm_id: int, x: np.ndarray) -> Tuple[float, float, float]:
         """
-        Compute LinUCB Reward Estimator:
-            hat{r}_{t,a}(x_t) = hat{theta}_a^T x_t + alpha * sqrt(x_t^T A_{t,a}^{-1} x_t)
+        Compute LinUCB Reward Estimator (Persamaan 3.16):
+            hat{r}_{t,a}(x_t) = clip( x_t^T hat{theta}_{t,a} + alpha * sqrt(x_t^T A_{t,a}^{-1} x_t), 0, 1 )
 
         Returns
         -------
@@ -231,13 +237,13 @@ class LinUCBwK(BaseCMABPolicy):
 
         quad = float(np.dot(x_col, np.dot(self.A_inv[arm_id], x_col)))
         uncertainty = self.alpha * math.sqrt(max(0.0, quad))
-        ucb = mean_est + uncertainty
+        ucb = float(np.clip(mean_est + uncertainty, 0.0, 1.0))
         return mean_est, uncertainty, ucb
 
     def estimate_cost(self, arm_id: int, x: np.ndarray) -> Tuple[float, float]:
         """
-        Compute Gas Cost Estimator:
-            hat{c}_{t,a}(x_t) = max( min_cost, hat{psi}_a^T x_t )
+        Compute Gas Cost Estimator (Persamaan 3.17):
+            hat{c}_{t,a}(x_t) = max( c_min, x_t^T hat{psi}_{t,a} - beta * sqrt(x_t^T A_{t,a}^{-1} x_t) )
 
         Returns
         -------
@@ -263,7 +269,7 @@ class LinUCBwK(BaseCMABPolicy):
         self,
         context: np.ndarray,
         available_arms: Optional[List[int]] = None,
-        filter_unaffordable: bool = True,
+        filter_unaffordable: bool = False,
     ) -> ArmSelectionResult:
         """
         Select optimal arm using Lagrangian Dual Decision Rule:
@@ -389,28 +395,31 @@ class LinUCBwK(BaseCMABPolicy):
         x = self.validate_context(context)
         r = float(np.clip(reward, 0.0, 1.0))
         c = (
-            float(np.clip(cost, self.min_cost, 10.0))
+            float(np.clip(cost, self.min_cost, self.max_cost))
             if cost is not None
             else self.last_predicted_cost
         )
 
         # ---------------------------------------------------------------------
-        # 1. Lagrangian Dual Multiplier & Budget Decay
+        # 1. Lagrangian Dual Multiplier & Budget Decay (Persamaan 3.12 - 3.14)
         # ---------------------------------------------------------------------
         self.remaining_budget = max(0.0, self.remaining_budget - c)
 
         # Target consumption rate per round: rho = B / T
         target_rate = self.initial_budget / float(self.total_horizon)
 
-        # Determine cost metric for dual gradient update
+        # Determine cost metric for dual gradient update (Persamaan 3.13)
         dual_cost_signal = self.last_predicted_cost if self.dual_update_mode == "estimated" else c
         dual_gradient = dual_cost_signal - target_rate
 
-        # Exponential Dual Update: lambda_t = lambda_{t-1} * exp( eta_t * (cost - B/T) )
-        step = self.eta * dual_gradient
-        clipped_step = float(np.clip(step, -5.0, 5.0))
-        new_lambda = self.lambda_t * math.exp(clipped_step)
-        self.lambda_t = float(np.clip(new_lambda, self.lambda_min, self.lambda_max))
+        # Exponential Dual Update (Persamaan 3.14)
+        if self.initial_lambda == 0.0 and self.lambda_min == 0.0:
+            self.lambda_t = 0.0
+        else:
+            step = self.eta * dual_gradient
+            clipped_step = float(np.clip(step, -self.g_max, self.g_max))
+            new_lambda = self.lambda_t * math.exp(clipped_step)
+            self.lambda_t = float(np.clip(new_lambda, self.lambda_min, self.lambda_max))
 
         # ---------------------------------------------------------------------
         # 2. Stationary Updates for Sufficient Statistics

@@ -26,6 +26,7 @@ if not DATASET_DIR.exists():
     DATASET_DIR = REPO_ROOT / "SC-Bench" / "categorized_dataset" / "Vault_and_Liquidity"
 
 MOCK_TOKEN_SOL = REPO_ROOT / "anvil_env" / "src" / "MockToken.sol"
+VULNERABLE_VAULT_SOL = REPO_ROOT / "anvil_env" / "src" / "VulnerableVault.sol"
 
 # Toolchain Binaries
 SOLC_BIN = "/home/opeteer/.local/bin/solc"
@@ -75,7 +76,7 @@ BUDGET_TIERS: Dict[str, Dict[str, Any]] = {
 }
 
 # Algorithmic Hyperparameters
-ALPHA = 0.15
+ALPHA = 0.55
 GAMMA = 0.82
 L2_LAMBDA = 1.0
 INITIAL_LAMBDA = 1.0

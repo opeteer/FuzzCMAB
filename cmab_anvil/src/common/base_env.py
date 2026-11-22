@@ -38,6 +38,11 @@ class StepTransition:
     context_vector: np.ndarray
     next_context_vector: np.ndarray
     reward_breakdown: Any
+    gas_price_gwei: float = 1.0
+    gas_used: int = 21000
+    tx_cost_eth: float = 0.001
+    remaining_budget_eth: float = 5.0
+    external_event: str = "none"
 
 
 class BaseUnprivilegedBanditEnv(ABC):

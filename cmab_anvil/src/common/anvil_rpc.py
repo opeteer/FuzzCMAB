@@ -773,6 +773,7 @@ class UnprivilegedAnvilClient:
         call_args: Optional[List[str]] = None,
         eth_value: float = 0.0,
         sender_private_key: Optional[str] = None,
+        gas_price_gwei: Optional[float] = None,
     ) -> Tuple[bool, str]:
         """
         Sign and broadcast a standard EOA transaction to Anvil.
@@ -788,6 +789,10 @@ class UnprivilegedAnvilClient:
         if eth_value > 0.0:
             wei_val = int(round(eth_value * 1e18))
             cast_args.extend(["--value", str(wei_val)])
+
+        if gas_price_gwei is not None and gas_price_gwei > 0.0:
+            wei_gas = int(round(gas_price_gwei * 1e9))
+            cast_args.extend(["--gas-price", str(wei_gas)])
 
         cast_args.extend(["--private-key", pk])
         out, err, code = self._run_cast(cast_args)

@@ -68,8 +68,8 @@ class DiscountedLinUCBTemplate(BaseCMABPolicy):
         sigma_noise: float = 0.5,
         param_norm_bound: float = 1.0,
         context_norm_bound: float = 2.5,
-        use_theoretical_beta: bool = True,
-        decay_all_arms: bool = True,
+        use_theoretical_beta: bool = False,
+        decay_all_arms: bool = False,
         seed: Optional[int] = 42,
         name: str = "DiscountedLinUCB",
     ):
@@ -210,11 +210,15 @@ class DiscountedLinUCBTemplate(BaseCMABPolicy):
     # -------------------------------------------------------------------------
     def _compute_sandwich_radius(self, arm_id: int, x_a: np.ndarray) -> float:
         """
-        Compute the sandwiched Mahalanobis confidence width:
+        Compute the Mahalanobis confidence width (Persamaan 3.16):
+          - If `use_theoretical_beta=False` (default Chapter 3 reduction lambda_t = 0):
+            s_{t,a} = sqrt( x_a^T @ V_a^{-1} @ x_a )
+          - If `use_theoretical_beta=True`:
             s_{t,a} = sqrt( x_a^T @ V_a^{-1} @ V_tilde_a @ V_a^{-1} @ x_a )
-        Note: Let u = V_a^{-1} @ x_a. Then s_{t,a} = sqrt( u^T @ V_tilde_a @ u ),
-        which requires only O(d^2) matrix-vector products!
         """
+        if not self.use_theoretical_beta:
+            quad = float(np.dot(x_a, np.dot(self.V_inv[arm_id], x_a)))
+            return float(np.sqrt(max(quad, 0.0)))
         u = np.dot(self.V_inv[arm_id], x_a)
         quad = float(np.dot(u, np.dot(self.V_tilde[arm_id], u)))
         return float(np.sqrt(max(quad, 0.0)))
@@ -225,8 +229,8 @@ class DiscountedLinUCBTemplate(BaseCMABPolicy):
         available_arms: Optional[List[int]] = None,
     ) -> ArmSelectionResult:
         """
-        Select the arm maximizing the Discounted Upper Confidence Bound:
-            UCB_t(a) = hat{theta}_{t,a}^T x_{t,a} + beta_{t,a} * sqrt(x_{t,a}^T V_{t,a}^{-1} tilde{V}_{t,a} V_{t,a}^{-1} x_{t,a})
+        Select the arm maximizing the Discounted Upper Confidence Bound (Persamaan 3.16 & 3.18 with lambda_t = 0):
+            hat{r}_{t,a}(x_t) = clip( x_t^T hat{theta}_{t,a} + alpha * sqrt(x_t^T A_{t,a}^{-1} x_t), 0, 1 )
         """
         candidate_arms = (
             list(range(self.n_arms))
@@ -250,7 +254,7 @@ class DiscountedLinUCBTemplate(BaseCMABPolicy):
             sandwich_radius = self._compute_sandwich_radius(a, x_a)
             bonus = beta_a * sandwich_radius
 
-            ucb = mean_est + bonus
+            ucb = float(np.clip(mean_est + bonus, 0.0, 1.0))
             all_scores[a] = ucb
             expected_rewards[a] = mean_est
             uncertainties[a] = bonus
@@ -402,13 +406,13 @@ class DiscountedLinUCB(DiscountedLinUCBTemplate):
         self,
         n_arms: int,
         context_dim: int,
-        gamma: float = 0.85,
-        alpha: float = 0.5,
+        gamma: float = 0.82,
+        alpha: float = 0.15,
         l2_lambda: float = 1.0,
         delta: float = 0.05,
         sigma_noise: float = 0.5,
-        use_theoretical_beta: bool = True,
-        decay_all_arms: bool = True,
+        use_theoretical_beta: bool = False,
+        decay_all_arms: bool = False,
         seed: Optional[int] = 42,
     ):
         super().__init__(

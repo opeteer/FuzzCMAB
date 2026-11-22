@@ -175,7 +175,8 @@ class LinUCBTemplate(BaseCMABPolicy):
             quad_form = max(quad_form, 0.0)  # Guard against floating-point numerical noise
             bonus = alpha_t * np.sqrt(quad_form)
 
-            ucb = mean_est + bonus
+            # Persamaan (3.16): clip(x_t^T hat{theta}_{t,a} + alpha * sqrt(x_t^T A_{t,a}^{-1} x_t), 0, 1)
+            ucb = float(np.clip(mean_est + bonus, 0.0, 1.0))
             all_scores[a] = ucb
             expected_rewards[a] = mean_est
             uncertainties[a] = bonus

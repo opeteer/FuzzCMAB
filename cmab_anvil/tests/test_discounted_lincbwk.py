@@ -214,3 +214,44 @@ def test_checkpoint_roundtrip():
 def test_alias_compatibility():
     assert DiscountedLinUCBWithKnapsack is DiscountedLinCBwK
 
+
+def test_persamaan_3_16_and_3_19_exact_alignment():
+    """
+    Verify Chapter 3 Persamaan (3.16) clipping [0, 1] and Persamaan (3.19)
+    ridge floor A_{t+1,a_t} = gamma * A_{t,a_t} + x_t x_t^T + (1 - gamma) * lambda_reg * I_d,
+    while unpulled arms remain unchanged (Algoritma 3.1 lines 30-31).
+    """
+    d = 4
+    gamma = 0.82
+    l2_reg = 1.5
+    policy = DiscountedLinCBwK(
+        n_arms=2,
+        context_dim=d,
+        gamma=gamma,
+        alpha=2.0,
+        l2_lambda=l2_reg,
+    )
+    x = np.array([1.0, 0.5, 0.2, 0.1], dtype=np.float64)
+
+    # Check Persamaan (3.16): UCB reward estimate is clipped to [0.0, 1.0]
+    _, _, ucb_r = policy.estimate_reward(0, x)
+    assert 0.0 <= ucb_r <= 1.0
+    assert math.isclose(ucb_r, 1.0)
+
+    A0_before = policy.A[0].copy()
+    A1_before = policy.A[1].copy()
+
+    policy.update(arm_id=0, context=x, reward=1.0, cost=0.01)
+
+    expected_A0 = (
+        gamma * A0_before
+        + np.outer(x, x)
+        + (1.0 - gamma) * l2_reg * np.eye(d)
+    )
+    np.testing.assert_allclose(policy.A[0], expected_A0, rtol=1e-6, atol=1e-6)
+    np.testing.assert_allclose(policy.A_inv[0], np.linalg.inv(expected_A0), rtol=1e-6, atol=1e-6)
+
+    # Unpulled arm 1 must remain untouched
+    np.testing.assert_allclose(policy.A[1], A1_before, rtol=1e-6, atol=1e-6)
+
+

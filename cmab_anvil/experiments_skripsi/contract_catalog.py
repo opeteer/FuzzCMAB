@@ -14,6 +14,12 @@ PEER_ADDR = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 AGENT_ADDR = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 
 TIER_METADATA: Dict[str, Dict[str, Any]] = {
+    "benchmark": {
+        "tier_id": "TIER_0_BENCHMARK",
+        "name": "Controlled Synthetic Benchmark (VulnerableVault)",
+        "description": "Kontrak tolok ukur sintetis terkontrol dengan prasyarat likuiditas ambang 5 ETH dan selfdestruct/insolvency oracle.",
+        "expected_sstore_range": "2 - 3 slots",
+    },
     "shallow": {
         "tier_id": "TIER_1_SHALLOW",
         "name": "Shallow State (Kompleksitas Rendah)",
@@ -36,38 +42,62 @@ TIER_METADATA: Dict[str, Dict[str, Any]] = {
 
 CATALOG_CONTRACTS: List[Dict[str, Any]] = [
     # =========================================================================
-    # TIER 1: SHALLOW STATE
+    # TIER 0: CONTROLLED SYNTHETIC BENCHMARK (Sub-bab 3.4a)
+    # =========================================================================
+    {
+        "id": "SKRIPSI-B01",
+        "contract_idx": 0,
+        "tier": "benchmark",
+        "split": "benchmark",
+        "file": "VulnerableVault.sol",
+        "contract": "VulnerableVault",
+        "category": "Controlled_Synthetic_Vault",
+        "description": "Kontrak tolok ukur sintetis terkontrol dengan prasyarat saldo >= 5 ETH pada emergencyWithdraw().",
+        "arms": [
+            {"id": 0, "name": "vault_deposit_small", "sig": "deposit()", "args": [], "val": 0.02, "role": "inflow_primary"},
+            {"id": 1, "name": "vault_deposit_medium", "sig": "deposit()", "args": [], "val": 0.05, "role": "inflow_secondary"},
+            {"id": 2, "name": "vault_withdraw_stake", "sig": "withdraw()", "args": [], "val": 0.0, "role": "secondary_ops"},
+            {"id": 3, "name": "vault_emergency_withdraw", "sig": "emergencyWithdraw()", "args": [], "val": 0.0, "role": "emergency_ops"},
+            {"id": 4, "name": "vault_zero_deposit_probe", "sig": "deposit()", "args": [], "val": 0.0, "role": "probe"},
+            {"id": 5, "name": "vault_eth_fallback", "sig": "", "args": [], "val": 0.01, "role": "fallback_ops"},
+        ],
+    },
+
+    # =========================================================================
+    # TIER 1: SHALLOW STATE (Sub-bab 3.4b)
     # =========================================================================
     {
         "id": "SKRIPSI-S01",
+        "contract_idx": 1,
         "tier": "shallow",
         "split": "injected",
         "file": "ClashForStash-0x939b0425.sol",
         "contract": "ClashForStash",
         "category": "Vault_Custody_Yield",
-        "description": "Token custody vault dengan min/max deposit caps dan transfer langsung antar member.",
+        "description": "Token custody vault dengan min/max deposit caps dan uninitialized trustedSigner (address(0)) ecrecover bypass.",
         "arms": [
             {"id": 0, "name": "member_deposit_small", "sig": "deposit(uint256)", "args": ["100000000000000000"], "val": 0.0, "role": "inflow_primary"},
             {"id": 1, "name": "member_deposit_medium", "sig": "deposit(uint256)", "args": ["150000000000000000"], "val": 0.0, "role": "inflow_secondary"},
             {"id": 2, "name": "member_transfer_peer", "sig": "transfer(address,uint256)", "args": [PEER_ADDR, "50000000000000000"], "val": 0.0, "role": "secondary_ops"},
             {"id": 3, "name": "member_increase_allowance", "sig": "increaseAllowance(address,uint256)", "args": [PEER_ADDR, "100000000000000000"], "val": 0.0, "role": "emergency_ops"},
-            {"id": 4, "name": "unsigned_withdraw_probe", "sig": "withdraw(uint256,bytes)", "args": ["100000000000000000", "0x00"], "val": 0.0, "role": "probe"},
+            {"id": 4, "name": "unsigned_withdraw_probe", "sig": "withdraw(uint256,bytes)", "args": ["250000000000000000", "DYNAMIC_SIG65"], "val": 0.0, "role": "probe"},
             {"id": 5, "name": "vault_eth_fallback", "sig": "", "args": [], "val": 0.05, "role": "fallback_ops"},
         ],
     },
     {
         "id": "SKRIPSI-S02",
+        "contract_idx": 2,
         "tier": "shallow",
         "split": "injected",
         "file": "Token-0x7c81418a.sol",
         "contract": "Token",
         "category": "Liquidity_Vault_Token",
-        "description": "Taxed liquidity token vault dengan public ETH flush dan fee-bearing transfers.",
+        "description": "Taxed liquidity token vault dengan unprotected public ETH flush (withdraw()) dan fee-bearing transfers.",
         "arms": [
-            {"id": 0, "name": "member_transfer_small", "sig": "transfer(address,uint256)", "args": [PEER_ADDR, "100000000000000000"], "val": 0.0, "role": "inflow_primary"},
-            {"id": 1, "name": "member_transfer_medium", "sig": "transfer(address,uint256)", "args": [DEPLOYER_ADDR, "200000000000000000"], "val": 0.0, "role": "inflow_secondary"},
+            {"id": 0, "name": "member_transfer_small", "sig": "transfer(address,uint256)", "args": [PEER_ADDR, "100000000000000"], "val": 0.0, "role": "inflow_primary"},
+            {"id": 1, "name": "member_transfer_medium", "sig": "transfer(address,uint256)", "args": [DEPLOYER_ADDR, "200000000000000"], "val": 0.0, "role": "inflow_secondary"},
             {"id": 2, "name": "public_withdraw_tax_eth", "sig": "withdraw()", "args": [], "val": 0.0, "role": "secondary_ops"},
-            {"id": 3, "name": "member_approve_spender", "sig": "approve(address,uint256)", "args": [PEER_ADDR, "500000000000000000"], "val": 0.0, "role": "emergency_ops"},
+            {"id": 3, "name": "member_approve_spender", "sig": "approve(address,uint256)", "args": [PEER_ADDR, "500000000000000"], "val": 0.0, "role": "emergency_ops"},
             {"id": 4, "name": "admin_removeLimits_probe", "sig": "removeLimits()", "args": [], "val": 0.0, "role": "probe"},
             {"id": 5, "name": "vault_eth_fallback", "sig": "", "args": [], "val": 0.03, "role": "fallback_ops"},
         ],
@@ -78,6 +108,7 @@ CATALOG_CONTRACTS: List[Dict[str, Any]] = [
     # =========================================================================
     {
         "id": "SKRIPSI-M01",
+        "contract_idx": 3,
         "tier": "medium",
         "split": "injected",
         "file": "DrawTT-0x02D33D35.sol",
@@ -97,17 +128,18 @@ CATALOG_CONTRACTS: List[Dict[str, Any]] = [
     },
     {
         "id": "SKRIPSI-M02",
+        "contract_idx": 4,
         "tier": "medium",
         "split": "origin",
         "file": "Shuffle-0x137110Eb.sol",
         "contract": "Shuffle",
         "category": "Liquidity_Pool_Lottery",
-        "description": "Custodial bidding room pool dengan time-locked bid withdrawal dan room modification.",
+        "description": "Custodial bidding room pool dengan time-locked bid withdrawal dan unprotected modifyRoom hijack.",
         "arms": [
             {"id": 0, "name": "member_place_bid_room1", "sig": "placeBid(uint256)", "args": ["1"], "val": 0.05, "role": "inflow_primary"},
             {"id": 1, "name": "member_place_bid_room2", "sig": "placeBid(uint256)", "args": ["2"], "val": 0.08, "role": "inflow_secondary"},
             {"id": 2, "name": "member_withdraw_bid_room1", "sig": "withdrawBid(uint256)", "args": ["1"], "val": 0.0, "role": "secondary_ops"},
-            {"id": 3, "name": "unprotected_modify_room2", "sig": "modifyRoom(uint256,bool,uint256,address)", "args": ["2", "true", "5", AGENT_ADDR], "val": 0.0, "role": "emergency_ops"},
+            {"id": 3, "name": "unprotected_modify_room2", "sig": "modifyRoom(uint256,bool,uint256,address)", "args": ["2", "true", "90", AGENT_ADDR], "val": 0.0, "role": "emergency_ops"},
             {"id": 4, "name": "admin_createRoom_probe", "sig": "createRoom(string,uint256,uint256,uint256,uint256,uint256,address)", "args": ["Hack", "100", "1000", "1", "5", "60", AGENT_ADDR], "val": 0.0, "role": "probe"},
             {"id": 5, "name": "zero_bid_probe", "sig": "placeBid(uint256)", "args": ["1"], "val": 0.0, "role": "fallback_ops"},
         ],
@@ -118,12 +150,13 @@ CATALOG_CONTRACTS: List[Dict[str, Any]] = [
     # =========================================================================
     {
         "id": "SKRIPSI-D01",
+        "contract_idx": 5,
         "tier": "deep",
         "split": "injected",
         "file": "PyramidToken-0xbc69f076.sol",
         "contract": "PyramidToken",
         "category": "Liquidity_Pyramid_Vault",
-        "description": "Tiered staking & liquidity vault dengan 30-day lockup maturity, referral bonus, dan burn mechanics.",
+        "description": "Tiered staking & liquidity vault dengan 30-day lockup maturity, unbacked referral bonus, dan burn mechanics.",
         "arms": [
             {"id": 0, "name": "member_stake_30days", "sig": "stake(uint256,uint256)", "args": ["1000000000000000000", "2592000"], "val": 0.0, "role": "inflow_primary"},
             {"id": 1, "name": "member_set_referrer", "sig": "setReferrer(address)", "args": [PEER_ADDR], "val": 0.0, "role": "inflow_secondary"},
@@ -135,29 +168,31 @@ CATALOG_CONTRACTS: List[Dict[str, Any]] = [
     },
     {
         "id": "SKRIPSI-D02",
+        "contract_idx": 6,
         "tier": "deep",
         "split": "origin",
         "file": "PymeStaking-0x90b8fbb7.sol",
         "contract": "PymeStaking",
         "category": "TimeLocked_Staking_Custody",
-        "description": "Upgradeable staking custody dengan lockup tiers, premature unlock, dan claim gates.",
+        "description": "Upgradeable staking custody dengan lockup tiers, high-yield reserve drain, dan claim gates.",
         "arms": [
             {"id": 0, "name": "member_stake_tier0", "sig": "stake(uint256,uint256)", "args": ["500000000000000000", "1"], "val": 0.0, "role": "inflow_primary"},
             {"id": 1, "name": "member_stake_tier1", "sig": "stake(uint256,uint256)", "args": ["1000000000000000000", "7"], "val": 0.0, "role": "inflow_secondary"},
-            {"id": 2, "name": "member_claim_mature", "sig": "claim(uint256)", "args": ["0"], "val": 0.0, "role": "secondary_ops"},
-            {"id": 3, "name": "member_unlock_premature", "sig": "unlockPremature(uint256)", "args": ["1"], "val": 0.0, "role": "emergency_ops"},
+            {"id": 2, "name": "member_claim_mature", "sig": "claim(uint256)", "args": ["DYNAMIC_STAKE_IDX"], "val": 0.0, "role": "secondary_ops"},
+            {"id": 3, "name": "member_unlock_premature", "sig": "unlockPremature(uint256)", "args": ["DYNAMIC_STAKE_IDX"], "val": 0.0, "role": "emergency_ops"},
             {"id": 4, "name": "admin_withdraw_probe", "sig": "withdraw()", "args": [], "val": 0.0, "role": "probe"},
             {"id": 5, "name": "admin_setReward_probe", "sig": "setReward(uint256,uint256)", "args": ["1", "5000"], "val": 0.0, "role": "fallback_ops"},
         ],
     },
     {
         "id": "SKRIPSI-D03",
+        "contract_idx": 7,
         "tier": "deep",
         "split": "origin",
         "file": "Airdrop-0x897b328c.sol",
         "contract": "Airdrop",
         "category": "Custodial_Merkle_Airdrop",
-        "description": "Merkle-verified token distribution custody dengan single-claim lock dan token underlying operations.",
+        "description": "Merkle-verified token distribution custody dengan single-node root claim dan token underlying operations.",
         "arms": [
             {"id": 0, "name": "member_merkle_claim_100", "sig": "claim(uint256,bytes32[])", "args": ["100000000000000000000", "[]"], "val": 0.0, "role": "inflow_primary"},
             {"id": 1, "name": "member_merkle_claim_250", "sig": "claim(uint256,bytes32[])", "args": ["250000000000000000000", "[]"], "val": 0.0, "role": "inflow_secondary"},
@@ -171,11 +206,13 @@ CATALOG_CONTRACTS: List[Dict[str, Any]] = [
 
 
 def get_contracts_by_tier(tier: str) -> List[Dict[str, Any]]:
-    """Mengembalikan daftar spesifikasi kontrak untuk tier tertentu ('shallow', 'medium', 'deep')."""
+    """Mengembalikan daftar spesifikasi kontrak untuk tier tertentu ('benchmark', 'shallow', 'medium', 'deep')."""
     tier_clean = tier.lower().strip()
     matched = [c for c in CATALOG_CONTRACTS if c["tier"] == tier_clean]
     if not matched:
-        raise ValueError(f"Tier tidak ditemukan: '{tier}'. Pilih 'shallow', 'medium', atau 'deep'.")
+        raise ValueError(
+            f"Tier tidak ditemukan: '{tier}'. Pilih 'benchmark', 'shallow', 'medium', atau 'deep'."
+        )
     return matched
 
 

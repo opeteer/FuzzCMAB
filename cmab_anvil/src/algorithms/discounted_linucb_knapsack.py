@@ -86,10 +86,13 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         beta: float = 0.0,
         l2_lambda: float = 1.0,
         initial_lambda: float = 1.0,
-        min_cost: float = 0.001,
+        min_cost: float = 0.0005,
+        max_cost: Optional[float] = None,
+        min_budget_threshold: float = 1e-6,
+        g_max: float = 5.0,
         use_sherman_morrison: bool = True,
-        decay_all_arms: bool = True,
-        dual_update_mode: str = "estimated",
+        decay_all_arms: bool = False,
+        dual_update_mode: str = "observed",
         lambda_min: float = 1e-4,
         lambda_max: float = 1e4,
         custom_eta: Optional[float] = None,
@@ -151,8 +154,8 @@ class DiscountedLinCBwK(BaseCMABPolicy):
             raise ValueError("beta must be non-negative.")
         if l2_lambda <= 0.0:
             raise ValueError("l2_lambda must be strictly positive.")
-        if initial_lambda <= 0.0:
-            raise ValueError("initial_lambda must be strictly positive for exponential updates.")
+        if initial_lambda < 0.0:
+            raise ValueError("initial_lambda must be non-negative.")
         if min_cost <= 0.0:
             raise ValueError("min_cost must be strictly positive.")
 
@@ -166,10 +169,13 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         self.initial_lambda = float(initial_lambda)
         self.lambda_t = float(initial_lambda)
         self.min_cost = float(min_cost)
+        self.max_cost = float(max_cost) if max_cost is not None else max(float(initial_budget), 10.0)
+        self.min_budget_threshold = float(min_budget_threshold)
+        self.g_max = float(g_max)
         self.use_sherman_morrison = bool(use_sherman_morrison)
         self.decay_all_arms = bool(decay_all_arms)
         self.dual_update_mode = str(dual_update_mode)
-        self.lambda_min = float(lambda_min)
+        self.lambda_min = 0.0 if initial_lambda == 0.0 else float(lambda_min)
         self.lambda_max = float(lambda_max)
         self.custom_eta = float(custom_eta) if custom_eta is not None else None
         self.rng = np.random.default_rng(seed)
@@ -236,8 +242,8 @@ class DiscountedLinCBwK(BaseCMABPolicy):
     # -------------------------------------------------------------------------
     def estimate_reward(self, arm_id: int, x: np.ndarray) -> Tuple[float, float, float]:
         """
-        Stage A: Compute Discounted LinUCB Reward Estimator.
-            hat{r}_{t,a}(x_t) = hat{theta}_{t,a,gamma}^T x_t + alpha * sqrt(x_t^T A_{t,a,gamma}^{-1} x_t)
+        Stage A: Compute Discounted LinUCB Reward Estimator (Persamaan 3.16):
+            hat{r}_{t,a}(x_t) = clip( x_t^T hat{theta}_{t,a} + alpha * sqrt(x_t^T A_{t,a}^{-1} x_t), 0, 1 )
 
         Returns
         -------
@@ -250,13 +256,13 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         # Quadratic Mahalanobis uncertainty form: x^T @ A^{-1} @ x
         quad = float(np.dot(x_col, np.dot(self.A_inv[arm_id], x_col)))
         uncertainty = self.alpha * math.sqrt(max(0.0, quad))
-        ucb = mean_est + uncertainty
+        ucb = float(np.clip(mean_est + uncertainty, 0.0, 1.0))
         return mean_est, uncertainty, ucb
 
     def estimate_cost(self, arm_id: int, x: np.ndarray) -> Tuple[float, float]:
         """
-        Stage B: Compute Discounted Gas Cost Estimator.
-            hat{c}_{t,a}(x_t) = max( min_cost, hat{psi}_{t,a,gamma}^T x_t )
+        Stage B: Compute Discounted Gas Cost Estimator (Persamaan 3.17):
+            hat{c}_{t,a}(x_t) = max( c_min, x_t^T hat{psi}_{t,a} - beta * sqrt(x_t^T A_{t,a}^{-1} x_t) )
 
         Returns
         -------
@@ -282,7 +288,7 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         self,
         context: np.ndarray,
         available_arms: Optional[List[int]] = None,
-        filter_unaffordable: bool = True,
+        filter_unaffordable: bool = False,
     ) -> ArmSelectionResult:
         """
         Stage D: Select optimal arm using Lagrangian Dual Decision Rule:
@@ -430,7 +436,7 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         x = self.validate_context(context)
         r = float(np.clip(reward, 0.0, 1.0))
         c = (
-            float(np.clip(cost, self.min_cost, 10.0))
+            float(np.clip(cost, self.min_cost, self.max_cost))
             if cost is not None
             else self.last_predicted_cost
         )
@@ -438,69 +444,67 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         eye = np.eye(self.context_dim, dtype=np.float64)
 
         # ---------------------------------------------------------------------
-        # 1. Stage C: Lagrangian Dual Multiplier & Budget Decay
+        # 1. Stage C: Lagrangian Dual Multiplier & Budget Decay (Persamaan 3.12 - 3.14)
         # ---------------------------------------------------------------------
         self.remaining_budget = max(0.0, self.remaining_budget - c)
 
         # Target consumption rate per round: rho = B / T
         target_rate = self.initial_budget / float(self.total_horizon)
 
-        # Determine cost metric for dual gradient update
+        # Sinyal gradien pelanggaran kuota anggaran (Persamaan 3.13): g_dual,t = c_t(a_t) - B/T
         dual_cost_signal = self.last_predicted_cost if self.dual_update_mode == "estimated" else c
         dual_gradient = dual_cost_signal - target_rate
 
-        # Exponential Dual Update: lambda_t = lambda_{t-1} * exp( eta_t * (cost - B/T) )
-        step = self.eta * dual_gradient
-        # Clip step to [-5.0, 5.0] to prevent math.exp overflow
-        clipped_step = float(np.clip(step, -5.0, 5.0))
-        new_lambda = self.lambda_t * math.exp(clipped_step)
-        self.lambda_t = float(np.clip(new_lambda, self.lambda_min, self.lambda_max))
+        # Pembaruan eksponensial pengali dual Lagrangian (Persamaan 3.14)
+        if self.initial_lambda == 0.0 and self.lambda_min == 0.0:
+            self.lambda_t = 0.0
+        else:
+            step = self.eta * dual_gradient
+            clipped_step = float(np.clip(step, -self.g_max, self.g_max))
+            new_lambda = self.lambda_t * math.exp(clipped_step)
+            self.lambda_t = float(np.clip(new_lambda, self.lambda_min, self.lambda_max))
 
         # ---------------------------------------------------------------------
-        # 2. Section 3: Recursive Updates for Sufficient Statistics
+        # 2. Pembaruan Memori Regresi Terdiskonto (Persamaan 3.19 - 3.21 & Algoritma 3.1 Baris 25-33)
         # ---------------------------------------------------------------------
         outer_xx = np.outer(x, x)
 
         if self.decay_all_arms and self.gamma < 1.0 - 1e-12:
-            # Synchronous discount across all idle arms
+            # Optional synchronous discount across idle arms if explicitly requested
             for a in range(self.n_arms):
                 if a == arm_id:
                     continue
                 self.A[a] = self.gamma * self.A[a] + (1.0 - self.gamma) * self.l2_lambda * eye
                 self.b_reward[a] *= self.gamma
                 self.b_cost[a] *= self.gamma
-
-                if self.use_sherman_morrison:
-                    # Invert directly or decay inverse towards (1 / lambda) * I
-                    self.A_inv[a] = np.linalg.inv(self.A[a])
-                else:
-                    self.A_inv[a] = np.linalg.inv(self.A[a])
-
+                self.A_inv[a] = np.linalg.inv(self.A[a])
                 self.theta[a] = np.dot(self.A_inv[a], self.b_reward[a])
                 self.psi[a] = np.dot(self.A_inv[a], self.b_cost[a])
 
-        # Update pulled arm
+        # Update pulled arm a_t (Persamaan 3.19):
+        # A_{t+1, a_t} = gamma * A_{t, a_t} + x_t x_t^T + (1 - gamma) * lambda_reg * I_d
+        # While unpulled arms (a != a_t) retain A_{t+1,a} = A_{t,a} when decay_all_arms=False.
         if self.use_sherman_morrison and self.gamma >= 1.0 - 1e-12:
-            # Standard stationary rank-1 Sherman-Morrison
+            # Stationary case (gamma = 1): (1 - gamma) * lambda_reg * I_d == 0
             u = np.dot(self.A_inv[arm_id], x)
             denom = 1.0 + float(np.dot(x, u))
             self.A_inv[arm_id] -= np.outer(u, u) / max(1e-12, denom)
             self.A_inv[arm_id] = 0.5 * (self.A_inv[arm_id] + self.A_inv[arm_id].T)
             self.A[arm_id] += outer_xx
-        elif self.use_sherman_morrison:
-            # Discounted rank-1 Sherman-Morrison (Section 3 Formula)
-            self.A_inv[arm_id] = self._sherman_morrison_rank1(self.A_inv[arm_id], x, self.gamma)
-            self.A[arm_id] = self.gamma * self.A[arm_id] + outer_xx
         else:
-            # Standard direct inversion
-            self.A[arm_id] = self.gamma * self.A[arm_id] + outer_xx
+            # Exact discounted covariance update with ridge floor (Persamaan 3.19)
+            self.A[arm_id] = (
+                self.gamma * self.A[arm_id]
+                + outer_xx
+                + (1.0 - self.gamma) * self.l2_lambda * eye
+            )
             self.A_inv[arm_id] = np.linalg.inv(self.A[arm_id])
 
-        # Update discounted response vectors
+        # Update discounted response vectors (Persamaan 3.20 & 3.21)
         self.b_reward[arm_id] = self.gamma * self.b_reward[arm_id] + r * x
         self.b_cost[arm_id] = self.gamma * self.b_cost[arm_id] + c * x
 
-        # Update parameter estimators
+        # Update parameter estimators (Persamaan 3.15)
         self.theta[arm_id] = np.dot(self.A_inv[arm_id], self.b_reward[arm_id])
         self.psi[arm_id] = np.dot(self.A_inv[arm_id], self.b_cost[arm_id])
 
@@ -534,11 +538,11 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         self, context: Optional[np.ndarray] = None
     ) -> Tuple[bool, str]:
         """
-        Section 4: Stopping Condition.
+        Section 4: Stopping Condition (Persamaan 3.12 & Algoritma 3.1 Baris 7-9).
         Process terminates if:
           1. Total Iterations Completed: t >= T
-          2. Budget Exhausted: B_t <= 0
-          3. Insufficient Budget: B_t < min_{a in A} hat{c}_{t,a}(x_t)
+          2. Budget Exhausted: B_t <= B_min
+          3. Optional context-based feasibility check if context is explicitly supplied.
 
         Returns
         -------
@@ -548,7 +552,7 @@ class DiscountedLinCBwK(BaseCMABPolicy):
         if self.total_rounds >= self.total_horizon:
             return True, "horizon_completed"
 
-        if self.remaining_budget <= 1e-6:
+        if self.remaining_budget <= self.min_budget_threshold:
             return True, "budget_exhausted"
 
         if context is not None:

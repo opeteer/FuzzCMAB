@@ -1,0 +1,1326 @@
+{
+  "timestamp": "20261112_132732",
+  "elapsed_seconds": 26.7,
+  "hyperparameters": {
+    "alpha": 0.15,
+    "gamma": 0.82,
+    "l2_lambda": 1.0,
+    "horizon_t": 8,
+    "seeds_m": 1,
+    "reward_weights": [
+      0.2,
+      0.3,
+      0.2,
+      1.0
+    ],
+    "reward_support": [
+      0.0,
+      0.2,
+      0.5,
+      0.7,
+      1.0
+    ]
+  },
+  "total_experiments": 1,
+  "statistical_summary": {
+    "alpha_stat": 0.05,
+    "policy_metrics": {
+      "UniformRandom": {
+        "cumulative_dynamic_regret": {
+          "n": 1,
+          "mean": 3.0,
+          "std": 0.0,
+          "ci95_low": 3.0,
+          "ci95_high": 3.0,
+          "formatted": "3.0000 +/- 0.0000"
+        },
+        "cumulative_reward": {
+          "n": 1,
+          "mean": 1.0,
+          "std": 0.0,
+          "ci95_low": 1.0,
+          "ci95_high": 1.0,
+          "formatted": "1.0000 +/- 0.0000"
+        },
+        "vuln_trigger_count": {
+          "n": 1,
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95_low": 0.0,
+          "ci95_high": 0.0,
+          "formatted": "0.0000 +/- 0.0000"
+        },
+        "sstore_count": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "waypoint_count": {
+          "n": 1,
+          "mean": 1.0,
+          "std": 0.0,
+          "ci95_low": 1.0,
+          "ci95_high": 1.0,
+          "formatted": "1.0000 +/- 0.0000"
+        },
+        "gas_efficiency_ratio": {
+          "n": 1,
+          "mean": 14.5163,
+          "std": 0.0,
+          "ci95_low": 14.5163,
+          "ci95_high": 14.5163,
+          "formatted": "14.5163 +/- 0.0000"
+        },
+        "budget_survival_rate": {
+          "n": 1,
+          "mean": 0.25,
+          "std": 0.0,
+          "ci95_low": 0.25,
+          "ci95_high": 0.25,
+          "formatted": "0.2500 +/- 0.0000"
+        },
+        "mean_execution_overhead_ms": {
+          "n": 1,
+          "mean": 0.2058,
+          "std": 0.0,
+          "ci95_low": 0.2058,
+          "ci95_high": 0.2058,
+          "formatted": "0.2058 +/- 0.0000"
+        }
+      },
+      "LinUCB": {
+        "cumulative_dynamic_regret": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "cumulative_reward": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "vuln_trigger_count": {
+          "n": 1,
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95_low": 0.0,
+          "ci95_high": 0.0,
+          "formatted": "0.0000 +/- 0.0000"
+        },
+        "sstore_count": {
+          "n": 1,
+          "mean": 4.0,
+          "std": 0.0,
+          "ci95_low": 4.0,
+          "ci95_high": 4.0,
+          "formatted": "4.0000 +/- 0.0000"
+        },
+        "waypoint_count": {
+          "n": 1,
+          "mean": 3.0,
+          "std": 0.0,
+          "ci95_low": 3.0,
+          "ci95_high": 3.0,
+          "formatted": "3.0000 +/- 0.0000"
+        },
+        "gas_efficiency_ratio": {
+          "n": 1,
+          "mean": 36.6772,
+          "std": 0.0,
+          "ci95_low": 36.6772,
+          "ci95_high": 36.6772,
+          "formatted": "36.6772 +/- 0.0000"
+        },
+        "budget_survival_rate": {
+          "n": 1,
+          "mean": 0.5,
+          "std": 0.0,
+          "ci95_low": 0.5,
+          "ci95_high": 0.5,
+          "formatted": "0.5000 +/- 0.0000"
+        },
+        "mean_execution_overhead_ms": {
+          "n": 1,
+          "mean": 0.3551,
+          "std": 0.0,
+          "ci95_low": 0.3551,
+          "ci95_high": 0.3551,
+          "formatted": "0.3551 +/- 0.0000"
+        }
+      },
+      "D-LinUCB": {
+        "cumulative_dynamic_regret": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "cumulative_reward": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "vuln_trigger_count": {
+          "n": 1,
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95_low": 0.0,
+          "ci95_high": 0.0,
+          "formatted": "0.0000 +/- 0.0000"
+        },
+        "sstore_count": {
+          "n": 1,
+          "mean": 4.0,
+          "std": 0.0,
+          "ci95_low": 4.0,
+          "ci95_high": 4.0,
+          "formatted": "4.0000 +/- 0.0000"
+        },
+        "waypoint_count": {
+          "n": 1,
+          "mean": 3.0,
+          "std": 0.0,
+          "ci95_low": 3.0,
+          "ci95_high": 3.0,
+          "formatted": "3.0000 +/- 0.0000"
+        },
+        "gas_efficiency_ratio": {
+          "n": 1,
+          "mean": 36.6772,
+          "std": 0.0,
+          "ci95_low": 36.6772,
+          "ci95_high": 36.6772,
+          "formatted": "36.6772 +/- 0.0000"
+        },
+        "budget_survival_rate": {
+          "n": 1,
+          "mean": 0.5,
+          "std": 0.0,
+          "ci95_low": 0.5,
+          "ci95_high": 0.5,
+          "formatted": "0.5000 +/- 0.0000"
+        },
+        "mean_execution_overhead_ms": {
+          "n": 1,
+          "mean": 0.3469,
+          "std": 0.0,
+          "ci95_low": 0.3469,
+          "ci95_high": 0.3469,
+          "formatted": "0.3469 +/- 0.0000"
+        }
+      },
+      "LinCBwK": {
+        "cumulative_dynamic_regret": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "cumulative_reward": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "vuln_trigger_count": {
+          "n": 1,
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95_low": 0.0,
+          "ci95_high": 0.0,
+          "formatted": "0.0000 +/- 0.0000"
+        },
+        "sstore_count": {
+          "n": 1,
+          "mean": 4.0,
+          "std": 0.0,
+          "ci95_low": 4.0,
+          "ci95_high": 4.0,
+          "formatted": "4.0000 +/- 0.0000"
+        },
+        "waypoint_count": {
+          "n": 1,
+          "mean": 3.0,
+          "std": 0.0,
+          "ci95_low": 3.0,
+          "ci95_high": 3.0,
+          "formatted": "3.0000 +/- 0.0000"
+        },
+        "gas_efficiency_ratio": {
+          "n": 1,
+          "mean": 36.6772,
+          "std": 0.0,
+          "ci95_low": 36.6772,
+          "ci95_high": 36.6772,
+          "formatted": "36.6772 +/- 0.0000"
+        },
+        "budget_survival_rate": {
+          "n": 1,
+          "mean": 0.5,
+          "std": 0.0,
+          "ci95_low": 0.5,
+          "ci95_high": 0.5,
+          "formatted": "0.5000 +/- 0.0000"
+        },
+        "mean_execution_overhead_ms": {
+          "n": 1,
+          "mean": 0.3894,
+          "std": 0.0,
+          "ci95_low": 0.3894,
+          "ci95_high": 0.3894,
+          "formatted": "0.3894 +/- 0.0000"
+        }
+      },
+      "D-LinCBwK": {
+        "cumulative_dynamic_regret": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "cumulative_reward": {
+          "n": 1,
+          "mean": 2.0,
+          "std": 0.0,
+          "ci95_low": 2.0,
+          "ci95_high": 2.0,
+          "formatted": "2.0000 +/- 0.0000"
+        },
+        "vuln_trigger_count": {
+          "n": 1,
+          "mean": 0.0,
+          "std": 0.0,
+          "ci95_low": 0.0,
+          "ci95_high": 0.0,
+          "formatted": "0.0000 +/- 0.0000"
+        },
+        "sstore_count": {
+          "n": 1,
+          "mean": 4.0,
+          "std": 0.0,
+          "ci95_low": 4.0,
+          "ci95_high": 4.0,
+          "formatted": "4.0000 +/- 0.0000"
+        },
+        "waypoint_count": {
+          "n": 1,
+          "mean": 3.0,
+          "std": 0.0,
+          "ci95_low": 3.0,
+          "ci95_high": 3.0,
+          "formatted": "3.0000 +/- 0.0000"
+        },
+        "gas_efficiency_ratio": {
+          "n": 1,
+          "mean": 36.6772,
+          "std": 0.0,
+          "ci95_low": 36.6772,
+          "ci95_high": 36.6772,
+          "formatted": "36.6772 +/- 0.0000"
+        },
+        "budget_survival_rate": {
+          "n": 1,
+          "mean": 0.5,
+          "std": 0.0,
+          "ci95_low": 0.5,
+          "ci95_high": 0.5,
+          "formatted": "0.5000 +/- 0.0000"
+        },
+        "mean_execution_overhead_ms": {
+          "n": 1,
+          "mean": 0.428,
+          "std": 0.0,
+          "ci95_low": 0.428,
+          "ci95_high": 0.428,
+          "formatted": "0.4280 +/- 0.0000"
+        }
+      }
+    },
+    "paired_hypothesis_tests": {
+      "D-LinCBwK_vs_UniformRandom": {
+        "cumulative_dynamic_regret": {
+          "n_pairs": 1,
+          "mean_diff": -1.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "cumulative_reward": {
+          "n_pairs": 1,
+          "mean_diff": 1.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "vuln_trigger_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "sstore_count": {
+          "n_pairs": 1,
+          "mean_diff": 2.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "waypoint_count": {
+          "n_pairs": 1,
+          "mean_diff": 2.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "gas_efficiency_ratio": {
+          "n_pairs": 1,
+          "mean_diff": 22.1609,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "budget_survival_rate": {
+          "n_pairs": 1,
+          "mean_diff": 0.25,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "mean_execution_overhead_ms": {
+          "n_pairs": 1,
+          "mean_diff": 0.2222,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        }
+      },
+      "D-LinCBwK_vs_LinUCB": {
+        "cumulative_dynamic_regret": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "cumulative_reward": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "vuln_trigger_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "sstore_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "waypoint_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "gas_efficiency_ratio": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "budget_survival_rate": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "mean_execution_overhead_ms": {
+          "n_pairs": 1,
+          "mean_diff": 0.0729,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        }
+      },
+      "D-LinCBwK_vs_D-LinUCB": {
+        "cumulative_dynamic_regret": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "cumulative_reward": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "vuln_trigger_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "sstore_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "waypoint_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "gas_efficiency_ratio": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "budget_survival_rate": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "mean_execution_overhead_ms": {
+          "n_pairs": 1,
+          "mean_diff": 0.0811,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        }
+      },
+      "D-LinCBwK_vs_LinCBwK": {
+        "cumulative_dynamic_regret": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "cumulative_reward": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "vuln_trigger_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "sstore_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "waypoint_count": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "gas_efficiency_ratio": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "budget_survival_rate": {
+          "n_pairs": 1,
+          "mean_diff": 0.0,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        },
+        "mean_execution_overhead_ms": {
+          "n_pairs": 1,
+          "mean_diff": 0.0386,
+          "t_stat": 0.0,
+          "p_value_ttest": 1.0,
+          "wilcoxon_stat": 0.0,
+          "p_value_wilcoxon": 1.0,
+          "significant_at_005": false
+        }
+      }
+    }
+  },
+  "experiments": [
+    {
+      "contract_id": "SKRIPSI-B01",
+      "contract_name": "VulnerableVault",
+      "tier": "benchmark",
+      "gas_regime": "volatile_spikes",
+      "budget_tier": "tight",
+      "seed_idx": 0,
+      "crn_seed": 2026,
+      "initial_budget_eth": 0.05,
+      "horizon_t": 8,
+      "results": {
+        "UniformRandom": {
+          "policy": "UniformRandom",
+          "contract": "VulnerableVault",
+          "rounds_survived": 2,
+          "budget_survival_rate": 0.25,
+          "termination_reason": "bankruptcy",
+          "bankruptcy": true,
+          "initial_budget_eth": 0.05,
+          "final_capital_eth": 0.0,
+          "capital_burned_eth": 0.0689,
+          "gas_efficiency_ratio": 14.5163,
+          "capital_efficiency_ratio": 14.5163,
+          "cumulative_reward": 1.0,
+          "mean_reward": 0.5,
+          "vuln_trigger_count": 0,
+          "sstore_count": 2,
+          "waypoint_count": 1,
+          "event_counts": {
+            "E0": 0,
+            "E1": 0,
+            "E2": 2,
+            "E3": 0,
+            "E4": 0
+          },
+          "success_rate": 1.0,
+          "revert_count": 0,
+          "arm_counts": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            1
+          ],
+          "arm_entropy_bits": 1.0,
+          "final_dual_lambda": 0.0,
+          "mean_execution_overhead_ms": 0.2058,
+          "std_execution_overhead_ms": 0.0767,
+          "anomalies": [],
+          "round_logs": [
+            {
+              "round": 1,
+              "gas_price_gwei": 104.84,
+              "gas_used": 48660,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": false,
+              "reward": 0.5,
+              "cost_eth": 0.015102,
+              "gas_cost": 0.015102,
+              "cumulative_reward": 0.5,
+              "balance_eth": 0.034898,
+              "burned_eth": 0.015102,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.2825,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 2,
+              "gas_price_gwei": 113.63,
+              "gas_used": 33325,
+              "arm_id": 1,
+              "arm_name": "vault_deposit_medium",
+              "arm_role": "inflow_secondary",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.053787,
+              "gas_cost": 0.053787,
+              "cumulative_reward": 1.0,
+              "balance_eth": 0.0,
+              "burned_eth": 0.068888,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.1291,
+              "event_type": "none"
+            }
+          ],
+          "cumulative_dynamic_regret": 3.0,
+          "mean_dynamic_regret": 0.375,
+          "state_switches_S": 3,
+          "dynamic_regret_trajectory": [
+            0.0,
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0
+          ]
+        },
+        "LinUCB": {
+          "policy": "LinUCB",
+          "contract": "VulnerableVault",
+          "rounds_survived": 4,
+          "budget_survival_rate": 0.5,
+          "termination_reason": "bankruptcy",
+          "bankruptcy": true,
+          "initial_budget_eth": 0.05,
+          "final_capital_eth": 0.0,
+          "capital_burned_eth": 0.0545,
+          "gas_efficiency_ratio": 36.6772,
+          "capital_efficiency_ratio": 36.6772,
+          "cumulative_reward": 2.0,
+          "mean_reward": 0.5,
+          "vuln_trigger_count": 0,
+          "sstore_count": 4,
+          "waypoint_count": 3,
+          "event_counts": {
+            "E0": 0,
+            "E1": 0,
+            "E2": 4,
+            "E3": 0,
+            "E4": 0
+          },
+          "success_rate": 1.0,
+          "revert_count": 0,
+          "arm_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            4
+          ],
+          "arm_entropy_bits": -0.0,
+          "final_dual_lambda": 0.0,
+          "mean_execution_overhead_ms": 0.3551,
+          "std_execution_overhead_ms": 0.1175,
+          "anomalies": [],
+          "round_logs": [
+            {
+              "round": 1,
+              "gas_price_gwei": 104.84,
+              "gas_used": 48660,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": false,
+              "reward": 0.5,
+              "cost_eth": 0.015102,
+              "gas_cost": 0.015102,
+              "cumulative_reward": 0.5,
+              "balance_eth": 0.034898,
+              "burned_eth": 0.015102,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.2298,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 2,
+              "gas_price_gwei": 113.63,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013586,
+              "gas_cost": 0.013586,
+              "cumulative_reward": 1.0,
+              "balance_eth": 0.021312,
+              "burned_eth": 0.028688,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.4308,
+              "event_type": "none"
+            },
+            {
+              "round": 3,
+              "gas_price_gwei": 66.13,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.012087,
+              "gas_cost": 0.012087,
+              "cumulative_reward": 1.5,
+              "balance_eth": 0.009225,
+              "burned_eth": 0.040775,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.2525,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 4,
+              "gas_price_gwei": 118.98,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013755,
+              "gas_cost": 0.013755,
+              "cumulative_reward": 2.0,
+              "balance_eth": 0.0,
+              "burned_eth": 0.05453,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.5075,
+              "event_type": "peer_liquidity"
+            }
+          ],
+          "cumulative_dynamic_regret": 2.0,
+          "mean_dynamic_regret": 0.25,
+          "state_switches_S": 5,
+          "dynamic_regret_trajectory": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0
+          ]
+        },
+        "D-LinUCB": {
+          "policy": "D-LinUCB",
+          "contract": "VulnerableVault",
+          "rounds_survived": 4,
+          "budget_survival_rate": 0.5,
+          "termination_reason": "bankruptcy",
+          "bankruptcy": true,
+          "initial_budget_eth": 0.05,
+          "final_capital_eth": 0.0,
+          "capital_burned_eth": 0.0545,
+          "gas_efficiency_ratio": 36.6772,
+          "capital_efficiency_ratio": 36.6772,
+          "cumulative_reward": 2.0,
+          "mean_reward": 0.5,
+          "vuln_trigger_count": 0,
+          "sstore_count": 4,
+          "waypoint_count": 3,
+          "event_counts": {
+            "E0": 0,
+            "E1": 0,
+            "E2": 4,
+            "E3": 0,
+            "E4": 0
+          },
+          "success_rate": 1.0,
+          "revert_count": 0,
+          "arm_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            4
+          ],
+          "arm_entropy_bits": -0.0,
+          "final_dual_lambda": 0.0,
+          "mean_execution_overhead_ms": 0.3469,
+          "std_execution_overhead_ms": 0.083,
+          "anomalies": [],
+          "round_logs": [
+            {
+              "round": 1,
+              "gas_price_gwei": 104.84,
+              "gas_used": 48660,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": false,
+              "reward": 0.5,
+              "cost_eth": 0.015102,
+              "gas_cost": 0.015102,
+              "cumulative_reward": 0.5,
+              "balance_eth": 0.034898,
+              "burned_eth": 0.015102,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.4022,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 2,
+              "gas_price_gwei": 113.63,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013586,
+              "gas_cost": 0.013586,
+              "cumulative_reward": 1.0,
+              "balance_eth": 0.021312,
+              "burned_eth": 0.028688,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.2476,
+              "event_type": "none"
+            },
+            {
+              "round": 3,
+              "gas_price_gwei": 66.13,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.012087,
+              "gas_cost": 0.012087,
+              "cumulative_reward": 1.5,
+              "balance_eth": 0.009225,
+              "burned_eth": 0.040775,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.2862,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 4,
+              "gas_price_gwei": 118.98,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013755,
+              "gas_cost": 0.013755,
+              "cumulative_reward": 2.0,
+              "balance_eth": 0.0,
+              "burned_eth": 0.05453,
+              "dual_lambda": 0.0,
+              "decision_overhead_ms": 0.4515,
+              "event_type": "peer_liquidity"
+            }
+          ],
+          "cumulative_dynamic_regret": 2.0,
+          "mean_dynamic_regret": 0.25,
+          "state_switches_S": 5,
+          "dynamic_regret_trajectory": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0
+          ]
+        },
+        "LinCBwK": {
+          "policy": "LinCBwK",
+          "contract": "VulnerableVault",
+          "rounds_survived": 4,
+          "budget_survival_rate": 0.5,
+          "termination_reason": "bankruptcy",
+          "bankruptcy": true,
+          "initial_budget_eth": 0.05,
+          "final_capital_eth": 0.0,
+          "capital_burned_eth": 0.0545,
+          "gas_efficiency_ratio": 36.6772,
+          "capital_efficiency_ratio": 36.6772,
+          "cumulative_reward": 2.0,
+          "mean_reward": 0.5,
+          "vuln_trigger_count": 0,
+          "sstore_count": 4,
+          "waypoint_count": 3,
+          "event_counts": {
+            "E0": 0,
+            "E1": 0,
+            "E2": 4,
+            "E3": 0,
+            "E4": 0
+          },
+          "success_rate": 1.0,
+          "revert_count": 0,
+          "arm_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            4
+          ],
+          "arm_entropy_bits": -0.0,
+          "final_dual_lambda": 1.0141,
+          "mean_execution_overhead_ms": 0.3894,
+          "std_execution_overhead_ms": 0.0758,
+          "anomalies": [],
+          "round_logs": [
+            {
+              "round": 1,
+              "gas_price_gwei": 104.84,
+              "gas_used": 48660,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": false,
+              "reward": 0.5,
+              "cost_eth": 0.015102,
+              "gas_cost": 0.015102,
+              "cumulative_reward": 0.5,
+              "balance_eth": 0.034898,
+              "burned_eth": 0.015102,
+              "dual_lambda": 1.0042,
+              "decision_overhead_ms": 0.484,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 2,
+              "gas_price_gwei": 113.63,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013586,
+              "gas_cost": 0.013586,
+              "cumulative_reward": 1.0,
+              "balance_eth": 0.021312,
+              "burned_eth": 0.028688,
+              "dual_lambda": 1.0077,
+              "decision_overhead_ms": 0.4284,
+              "event_type": "none"
+            },
+            {
+              "round": 3,
+              "gas_price_gwei": 66.13,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.012087,
+              "gas_cost": 0.012087,
+              "cumulative_reward": 1.5,
+              "balance_eth": 0.009225,
+              "burned_eth": 0.040775,
+              "dual_lambda": 1.0105,
+              "decision_overhead_ms": 0.2803,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 4,
+              "gas_price_gwei": 118.98,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013755,
+              "gas_cost": 0.013755,
+              "cumulative_reward": 2.0,
+              "balance_eth": 0.0,
+              "burned_eth": 0.05453,
+              "dual_lambda": 1.0141,
+              "decision_overhead_ms": 0.3649,
+              "event_type": "peer_liquidity"
+            }
+          ],
+          "cumulative_dynamic_regret": 2.0,
+          "mean_dynamic_regret": 0.25,
+          "state_switches_S": 5,
+          "dynamic_regret_trajectory": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0
+          ]
+        },
+        "D-LinCBwK": {
+          "policy": "D-LinCBwK",
+          "contract": "VulnerableVault",
+          "rounds_survived": 4,
+          "budget_survival_rate": 0.5,
+          "termination_reason": "bankruptcy",
+          "bankruptcy": true,
+          "initial_budget_eth": 0.05,
+          "final_capital_eth": 0.0,
+          "capital_burned_eth": 0.0545,
+          "gas_efficiency_ratio": 36.6772,
+          "capital_efficiency_ratio": 36.6772,
+          "cumulative_reward": 2.0,
+          "mean_reward": 0.5,
+          "vuln_trigger_count": 0,
+          "sstore_count": 4,
+          "waypoint_count": 3,
+          "event_counts": {
+            "E0": 0,
+            "E1": 0,
+            "E2": 4,
+            "E3": 0,
+            "E4": 0
+          },
+          "success_rate": 1.0,
+          "revert_count": 0,
+          "arm_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            4
+          ],
+          "arm_entropy_bits": -0.0,
+          "final_dual_lambda": 1.0141,
+          "mean_execution_overhead_ms": 0.428,
+          "std_execution_overhead_ms": 0.0948,
+          "anomalies": [],
+          "round_logs": [
+            {
+              "round": 1,
+              "gas_price_gwei": 104.84,
+              "gas_used": 48660,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": false,
+              "reward": 0.5,
+              "cost_eth": 0.015102,
+              "gas_cost": 0.015102,
+              "cumulative_reward": 0.5,
+              "balance_eth": 0.034898,
+              "burned_eth": 0.015102,
+              "dual_lambda": 1.0042,
+              "decision_overhead_ms": 0.5556,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 2,
+              "gas_price_gwei": 113.63,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013586,
+              "gas_cost": 0.013586,
+              "cumulative_reward": 1.0,
+              "balance_eth": 0.021312,
+              "burned_eth": 0.028688,
+              "dual_lambda": 1.0077,
+              "decision_overhead_ms": 0.3626,
+              "event_type": "none"
+            },
+            {
+              "round": 3,
+              "gas_price_gwei": 66.13,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.012087,
+              "gas_cost": 0.012087,
+              "cumulative_reward": 1.5,
+              "balance_eth": 0.009225,
+              "burned_eth": 0.040775,
+              "dual_lambda": 1.0105,
+              "decision_overhead_ms": 0.4788,
+              "event_type": "block_jitter"
+            },
+            {
+              "round": 4,
+              "gas_price_gwei": 118.98,
+              "gas_used": 31560,
+              "arm_id": 5,
+              "arm_name": "vault_eth_fallback",
+              "arm_role": "fallback_ops",
+              "tx_ok": true,
+              "event_partition": "E2",
+              "sstore_executed": true,
+              "dataflow_waypoint": true,
+              "reward": 0.5,
+              "cost_eth": 0.013755,
+              "gas_cost": 0.013755,
+              "cumulative_reward": 2.0,
+              "balance_eth": 0.0,
+              "burned_eth": 0.05453,
+              "dual_lambda": 1.0141,
+              "decision_overhead_ms": 0.3149,
+              "event_type": "peer_liquidity"
+            }
+          ],
+          "cumulative_dynamic_regret": 2.0,
+          "mean_dynamic_regret": 0.25,
+          "state_switches_S": 5,
+          "dynamic_regret_trajectory": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0
+          ]
+        }
+      }
+    }
+  ]
+}
