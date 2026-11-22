@@ -16,7 +16,7 @@ if not DEPLOYED_FILE.exists():
 with open(DEPLOYED_FILE) as f:
     deployed = json.load(f)
 
-print("[*] Generating FuzzMaster artifacts from Foundry compilation...")
+print("[*] Generating FuzzCMAB artifacts from Foundry compilation...")
 
 builder_artifacts = []
 
@@ -77,7 +77,7 @@ print(f"[✓] Builder artifacts saved to {builder_file}")
 # Generate execution summary
 vault_addr = deployed.get("VulnerableVault", "")
 print("\n" + "="*70)
-print("PANDUAN MENJALANKAN FUZZMASTER PADA SIMULATOR ANVIL:")
+print("PANDUAN MENJALANKAN FUZZCMAB PADA SIMULATOR ANVIL:")
 print("="*70)
 print("\n1. Mode Anvil On-Chain Fork (Memfuzing kontrak yang sedang aktif di Anvil):")
 print(f"cargo run --release --bin ityfuzz -- evm \\")

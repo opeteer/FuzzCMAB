@@ -1,7 +1,7 @@
 # Rancangan & Laporan Evaluasi Non-Stasioner LinUCB vs Discounted LinUCB pada 11 Kontrak SC-Bench (Anvil)
 
 > [!IMPORTANT]
-> **Validasi Metodologi Baru:** Rancangan ini telah direalisasikan dan dieksekusi secara penuh pada simulator **Anvil** (`http://127.0.0.1:8545`) melalui [`run_scbench_10contracts.py`](file:///home/opeteer/FuzzMaster/cmab_anvil/run_scbench_10contracts.py) dengan total **528 transaksi on-chain** ($11 \text{ kontrak} \times 24 \text{ putaran} \times 2 \text{ algoritma}$). Masalah *All-Revert Degeneracy* telah teratasi sepenuhnya (rata-rata *Success Rate* naik dari $16.36\%$ menjadi **$75.00\%$** pada D-LinUCB dan **$72.35\%$** pada LinUCB), dengan keunggulan adaptasi pasca-pergeseran rezim pada **D-LinUCB sebesar $+23.75\%$** ($+413.56$ vs $+334.20$).
+> **Validasi Metodologi Baru:** Rancangan ini telah direalisasikan dan dieksekusi secara penuh pada simulator **Anvil** (`http://127.0.0.1:8545`) melalui [`run_scbench_10contracts.py`](file:///home/opeteer/FuzzCMAB/cmab_anvil/tests/run_scbench_10contracts.py) dengan total **528 transaksi on-chain** ($11 \text{ kontrak} \times 24 \text{ putaran} \times 2 \text{ algoritma}$). Masalah *All-Revert Degeneracy* telah teratasi sepenuhnya (rata-rata *Success Rate* naik dari $16.36\%$ menjadi **$75.00\%$** pada D-LinUCB dan **$72.35\%$** pada LinUCB), dengan keunggulan adaptasi pasca-pergeseran rezim pada **D-LinUCB sebesar $+23.75\%$** ($+413.56$ vs $+334.20$).
 
 ---
 

@@ -3,8 +3,8 @@
 > **Status Simulasi**: Selesai Penuh (5 Kontrak Vault & Custody SC-Bench, 314.00 detik)  
 > **Konfigurasi Hyperparameter**: **STRICT PARITY** ($\alpha = 0.15$, $\lambda = 1.0$, `use_theoretical_beta=False`)  
 > **Lingkungan Eksekusi**: Local Anvil EVM (Chain ID 31337, RPC `http://127.0.0.1:8545`)  
-> **Arsip Telemetri**: [`scbench_capital_worst_case_stochastic_no_regime_results.json`](file:///home/opeteer/FuzzMaster/cmab_anvil/scbench_capital_worst_case_stochastic_no_regime_results.json)  
-> **Script Generator Grafik**: [`cmab_anvil/generate_charts_no_regime.py`](file:///home/opeteer/FuzzMaster/cmab_anvil/generate_charts_no_regime.py)
+> **Arsip Telemetri**: [`scbench_capital_worst_case_stochastic_no_regime_results.json`](file:///home/opeteer/FuzzCMAB/cmab_anvil/scbench_capital_worst_case_stochastic_no_regime_results.json)  
+> **Script Generator Grafik**: [`cmab_anvil/generate_charts_no_regime.py`](file:///home/opeteer/FuzzCMAB/cmab_anvil/generate_charts_no_regime.py)
 
 ---
 

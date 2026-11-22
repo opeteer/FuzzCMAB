@@ -83,7 +83,7 @@ contract VulnerableVault {
         selfdestruct(recipient);
     }
 
-    /// @notice Echidna / FuzzMaster Invariant check: Vault must remain solvent
+    /// @notice Echidna / FuzzCMAB Invariant check: Vault must remain solvent
     function echidna_solvency() external view returns (bool) {
         return address(this).balance >= totalDeposited;
     }

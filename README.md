@@ -1,4 +1,4 @@
-# CMAB-Anvil: Contextual Multi-Armed Bandit Smart Contract Fuzzing & Exploration Framework
+# FuzzCMAB: Contextual Multi-Armed Bandit Smart Contract Fuzzing & Exploration Framework
 
 Framework penelitian berbasis **Contextual Multi-Armed Bandits (CMAB)** untuk eksplorasi, fuzzing interaksi, dan deteksi anomali pada *smart contract* berbasis EVM di atas lingkungan simulator lokal **Anvil (Foundry)**.
 

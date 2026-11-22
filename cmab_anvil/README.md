@@ -1,6 +1,6 @@
 # Pemodelan Contextual Multi-Armed Bandits (CMAB) pada Simulator Anvil
 
-Folder ini (`cmab_anvil/`) berisi reformulasi permasalahan eksplorasi & interaksi *smart contract* dari **Deep Reinforcement Learning (DQN)** pada FuzzMaster menjadi kerangka kerja **Contextual Multi-Armed Bandits (CMAB)** untuk **pengguna cerdas tanpa hak istimewa (*unprivileged intelligent user*)** di atas jaringan lokal **Anvil (Foundry)**.
+Folder ini (`cmab_anvil/`) berisi implementasi **FuzzCMAB**: kerangka kerja **Contextual Multi-Armed Bandits (CMAB)** untuk eksplorasi & interaksi *smart contract* oleh **pengguna cerdas tanpa hak istimewa (*unprivileged intelligent user*)** di atas jaringan lokal **Anvil (Foundry)**.
 
 ---
 

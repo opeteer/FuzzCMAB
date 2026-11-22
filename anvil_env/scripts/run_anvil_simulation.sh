@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 echo "=========================================================="
-echo "🚀 FuzzMaster - Anvil Simulator Environment Orchestrator"
+echo "🚀 FuzzCMAB - Anvil Simulator Environment Orchestrator"
 echo "=========================================================="
 
 # 1. Start Anvil
@@ -14,7 +14,7 @@ echo "=========================================================="
 # 2. Build & Deploy Contracts
 "${SCRIPT_DIR}/deploy_contracts.sh" "http://127.0.0.1:8545"
 
-# 3. Export Artifacts for FuzzMaster
+# 3. Export Artifacts for FuzzCMAB
 python3 "${SCRIPT_DIR}/export_artifacts.py"
 
 echo ""

@@ -6,7 +6,7 @@ ENV_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CAST_BIN="${HOME}/.foundry/bin/cast"
 RPC_URL="${1:-http://127.0.0.1:8545}"
 
-# FuzzMaster default attacker/agent address
+# FuzzCMAB default attacker/agent address
 AGENT_ADDRESS="0x8EF508Aca04B32Ff3ba5003177cb18BfA6Cd79dd"
 # Deployer address (Anvil account #0)
 DEPLOYER_ADDRESS="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
@@ -43,8 +43,8 @@ else
     echo "    - Status Agen: Pengguna Publik Biasa (Unprivileged User)"
 fi
 
-# 4. Export artifacts for FuzzMaster
-echo "[4] Mengekspor artefak kompilasi untuk FuzzMaster..."
+# 4. Export artifacts for FuzzCMAB
+echo "[4] Mengekspor artefak kompilasi untuk FuzzCMAB..."
 python3 "${SCRIPT_DIR}/export_artifacts.py" > /dev/null
 
 BUILDER_FILE="${ENV_DIR}/fuzz_artifacts/builder_artifacts.json"
@@ -53,7 +53,7 @@ echo ""
 echo "=========================================================="
 echo "✓ LINGKUNGAN SIMULATOR ANVIL BERKEDUDUKAN ADIL TELAH SIAP"
 echo "=========================================================="
-echo "Perintah eksekusi FuzzMaster dalam mode adil (Strict Fair):"
+echo "Perintah eksekusi FuzzCMAB dalam mode adil (Strict Fair):"
 echo ""
 cat <<EOF
 cargo run --release --bin ityfuzz -- evm \\
