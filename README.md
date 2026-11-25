@@ -12,24 +12,51 @@ Pada setiap putaran interaksi diskrit $t \in \{1, 2, \dots, T\}$:
 
 1. **Observasi Konteks On-Chain & Jejak Dataflow ($x_t \in \mathbb{R}^{10}$):**
    Agen mengamati vektor fitur publik bebas-skala berdimensi $d = 10$ yang menggabungkan rasio likuiditas/solvabilitas kontrak ($x_1 \dots x_5$) dengan indikator *hybrid greybox/black-box* opcode EVM (`SSTORE` $x_6$, *dataflow waypoint* `SLOAD -> SSTORE` $x_7$, *moving-average revert rate* $x_8$, dan keutuhan *bytecode* $x_9$).
+
 2. **Seleksi Lengan Transaksi EOA ($a_t \in \mathcal{A} = \{0, \dots, K-1\}$):**
    Kebijakan **D-LinCBwK** menyeimbangkan optimisme imbalan (*Upper Confidence Bound*) dan penalti biaya gas (*Lagrangian Knapsack Shadow Price* $\lambda_t$):
-   $$a_t = \arg\max_{a \in \mathcal{A}} \left[ \hat{r}_{t,a}(x_t) - \lambda_t \, \check{c}_{t,a}(x_t) \right]$$
-   dengan:
-   $$\hat{r}_{t,a}(x_t) = \operatorname{clip}\!\left(x_t^\top \hat{\theta}_{t,a} + \alpha \sqrt{x_t^\top A_{t,a}^{-1} x_t},\; 0,\; 1\right)$$
-   $$\check{c}_{t,a}(x_t) = \max\!\left(c_{\min},\; x_t^\top \hat{\psi}_{t,a} - \beta \sqrt{x_t^\top A_{t,a}^{-1} x_t}\right)$$
+
+$$
+a_t = \arg\max_{a \in \mathcal{A}} \left[ \hat{r}_{t,a}(x_t) - \lambda_t \, \check{c}_{t,a}(x_t) \right]
+$$
+
+dengan estimator imbalan optimis dan biaya konservatif:
+
+$$
+\hat{r}_{t,a}(x_t) = \mathrm{clip}\left(x_t^\top \hat{\theta}_{t,a} + \alpha \sqrt{x_t^\top A_{t,a}^{-1} x_t},\; 0,\; 1\right)
+$$
+
+$$
+\check{c}_{t,a}(x_t) = \max\left(c_{\min},\; x_t^\top \hat{\psi}_{t,a} - \beta \sqrt{x_t^\top A_{t,a}^{-1} x_t}\right)
+$$
+
 3. **Imbalan Berjenjang 4-Komponen ($r_t \in \{0.00, 0.20, 0.50, 0.70, 1.00\}$):**
-   $$r_t(\tau_t, \mathbf{I}_t) = \mathbb{I}(\tau_t = 1) \cdot \min\!\left(1.00,\; \mathbf{w}^\top \mathbf{I}_t\right), \quad \mathbf{w} = [0.20,\; 0.30,\; 0.20,\; 1.00]^\top$$
+
+$$
+r_t(\tau_t, \mathbf{I}_t) = \mathbb{I}(\tau_t = 1) \cdot \min\left(1.00,\; \mathbf{w}^\top \mathbf{I}_t\right), \quad \mathbf{w} = [0.20,\; 0.30,\; 0.20,\; 1.00]^\top
+$$
+
    * $E_0$ (`0.00`): Transaksi gagal / `REVERT` ($\tau_t = 0$).
-   * $E_1$ (`0.20`): Eksekusi EVM valid tanpa mutasi storage ($E_{\text{exec}}$).
-   * $E_2$ (`0.50`): Eksekusi valid + mutasi storage persisten $\Delta S_{\text{storage},t} \neq 0$ ($E_{\text{exec}} + E_{\text{state}}$).
-   * $E_3$ (`0.70`): Mutasi storage + ekstraksi aset ekonomi ke EOA agen ($E_{\text{exec}} + E_{\text{state}} + E_{\text{econ}}$).
-   * $E_4$ (`1.00`): **Pelanggaran invarian keamanan / kerentanan kritis** ($E_{\text{vuln}}$: *solvency breach* $B_{t+1}^{(C)} < L_{t+1}^{(C)}$ atau kehancuran kontrak $\Omega_t > \Omega_{t+1}$).
+   * $E_1$ (`0.20`): Eksekusi EVM valid tanpa mutasi storage ($E_{\mathrm{exec}}$).
+   * $E_2$ (`0.50`): Eksekusi valid + mutasi storage persisten $\Delta S_{\mathrm{storage},t} \neq 0$ ($E_{\mathrm{exec}} + E_{\mathrm{state}}$).
+   * $E_3$ (`0.70`): Mutasi storage + ekstraksi aset ekonomi ke EOA agen ($E_{\mathrm{exec}} + E_{\mathrm{state}} + E_{\mathrm{econ}}$).
+   * $E_4$ (`1.00`): **Pelanggaran invarian keamanan / kerentanan kritis** ($E_{\mathrm{vuln}}$: *solvency breach* $B_{t+1}^{(C)} < L_{t+1}^{(C)}$ atau kehancuran kontrak $\Omega_t > \Omega_{t+1}$).
+
 4. **Biaya Transaksi Aktual & Dinamika Anggaran Knapsack ($c_t, B_t, \lambda_{t+1}$):**
-   $$c_t(a_t) = \operatorname{clip}\!\left((\text{GasUsed}_t(a_t) \times g_t) + v_{a_t},\; c_{\min},\; c_{\max}\right), \quad B_t = \max(0,\; B_{t-1} - c_t(a_t))$$
-   $$\lambda_{t+1} = \operatorname{clip}\!\left(\lambda_t + \eta \left(c_t(a_t) - \frac{B}{T}\right),\; 0,\; \lambda_{\max}\right)$$
+
+$$
+c_t(a_t) = \mathrm{clip}\left((\mathrm{GasUsed}_t(a_t) \times g_t) + v_{a_t},\; c_{\min},\; c_{\max}\right), \quad B_t = \max\left(0,\; B_{t-1} - c_t(a_t)\right)
+$$
+
+$$
+\lambda_{t+1} = \mathrm{clip}\left(\lambda_t + \eta \left(c_t(a_t) - \frac{B}{T}\right),\; 0,\; \lambda_{\max}\right)
+$$
+
 5. **Pembaruan Regresi Linier Terdiskonto ($\gamma \in (0, 1]$):**
-   $$A_{t+1,a_t} = \gamma A_{t,a_t} + x_t x_t^\top + (1 - \gamma)\lambda_{\text{reg}} I_d$$
+
+$$
+A_{t+1,a_t} = \gamma A_{t,a_t} + x_t x_t^\top + (1 - \gamma)\lambda_{\mathrm{reg}} I_d
+$$
 
 ---
 
@@ -39,42 +66,42 @@ Pada setiap putaran interaksi diskrit $t \in \{1, 2, \dots, T\}$:
 
 ```mermaid
 flowchart TD
-    subgraph L1["1. Orkestrasi & Konfigurasi Eksperimen"]
+    subgraph L1["1. Orkestrasi dan Konfigurasi Eksperimen"]
         CFG["experiments_skripsi/config.py (BUDGET_TIERS, ALPHA=0.55, GAMMA=0.82)"]
-        CAT["experiments_skripsi/contract_catalog.py (CATALOG_CONTRACTS: B01, S01..D03)"]
+        CAT["experiments_skripsi/contract_catalog.py (CATALOG_CONTRACTS B01, S01..D03)"]
         RUN["experiments_skripsi/runner.py (run_experiment_matrix, run_single_policy)"]
-        SIM["tests/run_cmab_simulation.py & run_comparative_experiment.py"]
+        SIM["tests/run_cmab_simulation.py dan run_comparative_experiment.py"]
     end
 
-    subgraph L2["2. Inisialisasi Kontrak & Dinamika Non-Stasioner (CRN)"]
-        SETUP["runner.py:setup_member_environment / setup_fair_agent.sh (Zero-Privilege Onboarding)"]
-        GAS["experiments_skripsi/gas_regimes.py:generate_gas_series (Stable vs Volatile Spikes)"]
-        PEER["runner.py:execute_network_event / agent.py:simulate_external_party_event (PEER_PK Tx)"]
+    subgraph L2["2. Inisialisasi Kontrak dan Dinamika Non-Stasioner CRN"]
+        SETUP["runner.py setup_member_environment dan setup_fair_agent.sh"]
+        GAS["experiments_skripsi/gas_regimes.py generate_gas_series (Stable vs Volatile Spikes)"]
+        PEER["runner.py execute_network_event dan agent.py simulate_external_party_event"]
     end
 
-    subgraph L3["3. Observasi State EVM & Ekstraksi Konteks 10D"]
-        RPC_READ["src/common/anvil_rpc.py:UnprivilegedAnvilClient (query_total_deposited, query_agent_stake, infer_mapping_balance_from_storage)"]
-        SNAP["src/Agen_Vault_Custody/context.py:OnChainContextSnapshot"]
-        CTX["src/Agen_Vault_Custody/context.py:PublicContextExtractor.to_vector (x_t in R^10)"]
+    subgraph L3["3. Observasi State EVM dan Ekstraksi Konteks 10D"]
+        RPC_READ["src/common/anvil_rpc.py UnprivilegedAnvilClient (4-Tier ABI dan Keccak256 Storage)"]
+        SNAP["src/Agen_Vault_Custody/context.py OnChainContextSnapshot"]
+        CTX["src/Agen_Vault_Custody/context.py PublicContextExtractor.to_vector (10D Context x_t)"]
     end
 
     subgraph L4["4. Mesin Keputusan Bandit (src/algorithms/)"]
-        DLIN["discounted_linucb_knapsack.py:DiscountedLinCBwK (estimate_reward, estimate_cost, select_arm)"]
-        BASE["linucb_knapsack.py | discounted_linucb.py | linucb.py | uniform_random.py"]
+        DLIN["discounted_linucb_knapsack.py DiscountedLinCBwK (estimate_reward, estimate_cost, select_arm)"]
+        BASE["linucb_knapsack.py, discounted_linucb.py, linucb.py, uniform_random.py"]
     end
 
-    subgraph L5["5. Eksekusi Transaksi EOA & Pelacakan Dataflow EVM"]
-        ARM["src/common/base_env.py:Arm & src/Agen_Vault_Custody/arms.py"]
-        EXEC["agent.py:execute_arm / runner.py:execute_member_arm -> send_eoa_transaction (cast send)"]
-        TRACE["anvil_rpc.py:trace_transaction_dataflow (debug_traceTransaction SLOAD/SSTORE + storage diff -> x6, x7)"]
-        ANVIL["Node Simulator Anvil EVM (Port 8545, --steps-tracing, Cancun EVM)"]
+    subgraph L5["5. Eksekusi Transaksi EOA dan Pelacakan Dataflow EVM"]
+        ARM["src/common/base_env.py Arm dan src/Agen_Vault_Custody/arms.py"]
+        EXEC["agent.py execute_arm dan runner.py execute_member_arm via send_eoa_transaction"]
+        TRACE["anvil_rpc.py trace_transaction_dataflow (debug_traceTransaction SLOAD SSTORE dan Storage Diff)"]
+        ANVIL["Node Simulator Anvil EVM (Port 8545, steps-tracing, Cancun EVM)"]
     end
 
-    subgraph L6["6. Orakel Imbalan, Dinamika Knapsack, & Evaluasi"]
-        LIAB["runner.py:update_legitimate_liabilities_before_post_snapshot & reanchor_post_vulnerability_state"]
-        REW["src/Agen_Vault_Custody/reward.py:VaultCustodyRewardOracle.compute_reward (Partisi E0..E4)"]
+    subgraph L6["6. Orakel Imbalan, Dinamika Knapsack, dan Evaluasi"]
+        LIAB["runner.py update_legitimate_liabilities dan reanchor_post_vulnerability_state"]
+        REW["src/Agen_Vault_Custody/reward.py VaultCustodyRewardOracle.compute_reward (Partisi E0..E4)"]
         UPD["DiscountedLinCBwK.update (Update Matriks A_t, theta_t, psi_t, Dual lambda_t, Budget B_t)"]
-        EVAL["src/algorithms/dynamic_regret.py:compare_policies_dynamic_regret & generate_plots.py"]
+        EVAL["src/algorithms/dynamic_regret.py compare_policies_dynamic_regret dan generate_plots.py"]
     end
 
     CFG --> RUN
@@ -104,38 +131,38 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Runner as runner.py / agent.py
+    participant Runner as Runner (runner.py / agent.py)
     participant Anvil as Anvil EVM (Port 8545)
-    participant RPC as anvil_rpc.py (UnprivilegedAnvilClient)
-    participant Context as context.py (PublicContextExtractor)
-    participant Policy as discounted_linucb_knapsack.py (D-LinCBwK)
-    participant Oracle as reward.py (VaultCustodyRewardOracle)
+    participant RPC as UnprivilegedAnvilClient (anvil_rpc.py)
+    participant Context as PublicContextExtractor (context.py)
+    participant Policy as D-LinCBwK (discounted_linucb_knapsack.py)
+    participant Oracle as VaultCustodyRewardOracle (reward.py)
 
-    Note over Runner,Policy: Awal Putaran t: Cek Kebangkrutan (remaining_budget <= B_min)
-    Runner->>Anvil: Set BaseFee g_t (anvil_setNextBlockBaseFeePerGas)
-    Runner->>Anvil: Eksekusi Transaksi Pihak Luar (PEER_PK deposit / withdraw / transfer)
-    Runner->>RPC: Baca Saldo, Liabilitas 4-Tier, & Status Bytecode
+    Note over Runner,Policy: Awal Putaran t (cek sisa anggaran remaining_budget terhadap B_min)
+    Runner->>Anvil: Set BaseFee g_t via anvil_setNextBlockBaseFeePerGas
+    Runner->>Anvil: Eksekusi transaksi pihak luar PEER_PK (deposit, withdraw, transfer)
+    Runner->>RPC: Baca saldo kontrak, liabilitas 4-Tier, dan status bytecode
     RPC->>Anvil: eth_getBalance, eth_call, eth_getStorageAt, eth_getCode
     RPC-->>Context: OnChainContextSnapshot (prev_snap)
-    Context-->>Runner: Vektor Konteks Ternormalisasi x_t in R^10
+    Context-->>Runner: Vektor konteks ternormalisasi x_t (10 dimensi)
     Runner->>Policy: select_arm(x_t)
-    Note over Policy: Hitung UCB Reward r_hat(x_t), Prediksi Biaya c_hat(x_t), Pilih a_t = argmax_a [r_hat - lambda_t * c_hat]
+    Note over Policy: Hitung UCB Reward r_hat dan Prediksi Biaya c_hat lalu pilih a_t optimal
     Policy-->>Runner: ArmSelectionResult (arm_id = a_t)
     Runner->>RPC: snapshot_contract_storage(target_addr)
-    Runner->>RPC: send_eoa_transaction(Arm a_t, --value v_a, --gas-price g_t, --private-key AGENT_PK)
-    RPC->>Anvil: Broadcast Transaksi EOA Tanpa Hak Istimewa
-    Anvil-->>RPC: Receipt Transaksi (tx_ok, tx_hash, gasUsed)
+    Runner->>RPC: send_eoa_transaction(Arm a_t, value v_a, gas_price g_t, AGENT_PK)
+    RPC->>Anvil: Broadcast transaksi EOA tanpa hak istimewa via cast send
+    Anvil-->>RPC: Receipt transaksi (tx_ok, tx_hash, gasUsed)
     Runner->>RPC: trace_transaction_dataflow(tx_hash, pre_storage)
-    RPC->>Anvil: debug_traceTransaction (structLogs SLOAD/SSTORE) / Storage Diff
-    RPC-->>Runner: Sinyal Dataflow (x6_sstore_flag, x7_waypoint_flag)
+    RPC->>Anvil: debug_traceTransaction (structLogs SLOAD dan SSTORE) serta Storage Diff
+    RPC-->>Runner: Sinyal dataflow (x6_sstore_flag dan x7_waypoint_flag)
     Runner->>Runner: update_legitimate_liabilities_before_post_snapshot()
-    Runner->>Context: Observasi State Pasca-Transaksi (next_snap)
+    Runner->>Context: Observasi state pasca-transaksi (next_snap)
     Runner->>Oracle: compute_reward(prev_snap, next_snap, tx_ok, a_t)
-    Oracle-->>Runner: BanditRewardBreakdown (r_t in {0.0, 0.2, 0.5, 0.7, 1.0}, Partisi E0..E4)
-    Runner->>Runner: Hitung Biaya c_t(a_t) = clip(GasUsed * g_t + v_a) & Sisa Anggaran B_t = max(0, B_{t-1} - c_t)
-    Runner->>Runner: reanchor_post_vulnerability_state() (jika E4 terpicu)
+    Oracle-->>Runner: BanditRewardBreakdown (r_t pada partisi E0, E1, E2, E3, atau E4)
+    Runner->>Runner: Hitung biaya aktual c_t(a_t) dan potong sisa anggaran B_t
+    Runner->>Runner: reanchor_post_vulnerability_state() apabila E4 terpicu
     Runner->>Policy: update(a_t, x_t, reward=r_t, cost=c_t)
-    Note over Policy: Diskon Kovariansi A_{t+1} = gamma*A_t + x_t*x_t^T + (1-gamma)*lambda_reg*I, Update Bobot theta, psi, & Proyeksi Dual lambda_{t+1}
+    Note over Policy: Diskon matriks kovariansi A_t dengan faktor gamma dan update dual lambda_t
 ```
 
 ---

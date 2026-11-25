@@ -39,15 +39,15 @@ cmab_anvil/
 | Indeks | Nama Fitur (`FEATURE_NAMES`) | Rumus Normalisasi | Rentang | Makna Domain |
 | :-: | :--- | :--- | :---: | :--- |
 | $x_0$ | `x0_bias` | $1.0$ | $\{1.0\}$ | Suku intersep regresi ridge linier. |
-| $x_1$ | `x1_vault_liquidity_ratio` | $\frac{\text{Vault\_ETH}}{\text{Vault\_ETH} + \text{Agent\_ETH} + \epsilon}$ | $[0.0, 1.0]$ | Proporsi likuiditas kontrak relatif terhadap modal agen. |
-| $x_2$ | `x2_claim_liability_ratio` | $\frac{\text{Total\_Deposited}}{\text{Vault\_ETH} + \text{Total\_Deposited} + \epsilon}$ | $[0.0, 1.0]$ | Rasio beban kewajiban klaim terhadap aset kontrak. |
-| $x_3$ | `x3_solvency_gap_ratio` | $\operatorname{clip}\!\left(\frac{\text{Vault\_ETH} - \text{Total\_Deposited}}{\max(\text{Total\_Deposited}, 1.0)}, -1, 1\right)$ | $[-1.0, 1.0]$ | Surplus ($>0$) atau defisit/insolvensi ($<0$) cadangan kontrak. |
-| $x_4$ | `x4_agent_stake_ratio` | $\operatorname{clip}\!\left(\frac{\text{Agent\_Vault\_Stake}}{\text{stake\_denom}}, 0, 1\right)$ | $[0.0, 1.0]$ | Proporsi saldo/*stake* tercatat milik agen di dalam kontrak. |
-| $x_5$ | `x5_deposit_eligibility` | $\min\!\left(1.0, \frac{\text{Agent\_EOA\_ETH}}{\text{Min\_Deposit\_Req}}\right)$ | $[0.0, 1.0]$ | Kelayakan modal seketika untuk mengeksekusi fungsi *payable*. |
-| $x_6$ | `x6_sstore_execution_flag` | $\mathbb{I}(\text{tx}_{t-1} \text{ mengeksekusi } \texttt{SSTORE})$ | $\{0.0, 1.0\}$ | Indikator apakah aksi terakhir mengubah storage persisten EVM. |
-| $x_7$ | `x7_dataflow_waypoint_flag` | $\mathbb{I}(\texttt{SSTORE}_{t-1} \cap \bigcup_{k < t-1} \texttt{SLOAD}_k \neq \emptyset)$ | $\{0.0, 1.0\}$ | Indikator terbukanya ketergantungan data lintas-transaksi (*waypoint*). |
+| $x_1$ | `x1_vault_liquidity_ratio` | $\frac{\mathrm{VaultETH}}{\mathrm{VaultETH} + \mathrm{AgentETH} + \epsilon}$ | $[0.0, 1.0]$ | Proporsi likuiditas kontrak relatif terhadap modal agen. |
+| $x_2$ | `x2_claim_liability_ratio` | $\frac{\mathrm{TotalDeposited}}{\mathrm{VaultETH} + \mathrm{TotalDeposited} + \epsilon}$ | $[0.0, 1.0]$ | Rasio beban kewajiban klaim terhadap aset kontrak. |
+| $x_3$ | `x3_solvency_gap_ratio` | $\mathrm{clip}\left(\frac{\mathrm{VaultETH} - \mathrm{TotalDeposited}}{\max(\mathrm{TotalDeposited}, 1.0)}, -1, 1\right)$ | $[-1.0, 1.0]$ | Surplus ($>0$) atau defisit/insolvensi ($<0$) cadangan kontrak. |
+| $x_4$ | `x4_agent_stake_ratio` | $\mathrm{clip}\left(\frac{\mathrm{AgentVaultStake}}{\mathrm{StakeDenom}}, 0, 1\right)$ | $[0.0, 1.0]$ | Proporsi saldo/*stake* tercatat milik agen di dalam kontrak. |
+| $x_5$ | `x5_deposit_eligibility` | $\min\left(1.0, \frac{\mathrm{AgentEOAETH}}{\mathrm{MinDepositReq}}\right)$ | $[0.0, 1.0]$ | Kelayakan modal seketika untuk mengeksekusi fungsi *payable*. |
+| $x_6$ | `x6_sstore_execution_flag` | $\mathbb{I}(\mathrm{tx}_{t-1} \text{ mengeksekusi } \mathtt{SSTORE})$ | $\{0.0, 1.0\}$ | Indikator apakah aksi terakhir mengubah storage persisten EVM. |
+| $x_7$ | `x7_dataflow_waypoint_flag` | $\mathbb{I}(\mathtt{SSTORE}_{t-1} \cap \bigcup_{k < t-1} \mathtt{SLOAD}_k \neq \emptyset)$ | $\{0.0, 1.0\}$ | Indikator terbukanya ketergantungan data lintas-transaksi (*waypoint*). |
 | $x_8$ | `x8_recent_revert_rate` | $\frac{1}{W}\sum_{k=t-W}^{t-1} \mathbb{I}(\tau_k = 0), \; W=8$ | $[0.0, 1.0]$ | Rata-rata bergerak tingkat kegagalan (*revert*) 8 transaksi terakhir. |
-| $x_9$ | `x9_vault_code_alive` | $\mathbb{I}(\lvert\text{Bytecode}(\text{Vault})\rvert > 0)$ | $\{0.0, 1.0\}$ | Indikator keutuhan *bytecode* kontrak (`0.0` jika `selfdestruct`). |
+| $x_9$ | `x9_vault_code_alive` | $\mathbb{I}(\lvert\mathrm{Bytecode}(\mathrm{Vault})\rvert > 0)$ | $\{0.0, 1.0\}$ | Indikator keutuhan *bytecode* kontrak (`0.0` jika `selfdestruct`). |
 
 ---
 
