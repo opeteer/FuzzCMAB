@@ -57,9 +57,17 @@ class BaseCMABPolicy(ABC):
         pass
 
     @abstractmethod
-    def update(self, arm_id: int, context: np.ndarray, reward: float) -> None:
+    def update(
+        self,
+        arm_id: int,
+        context: np.ndarray,
+        reward: float,
+        cost: Optional[float] = None,
+    ) -> None:
         """
-        Update policy parameters after observing bandit feedback (x_t, a_t, r_t).
+        Update policy parameters after observing bandit feedback (x_t, a_t, r_t, c_t).
+        Unconstrained policies ignore `cost`; Knapsack policies update their cost
+        estimator and Lagrangian dual variable lambda_t.
         """
         pass
 

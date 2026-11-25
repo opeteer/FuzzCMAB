@@ -831,10 +831,7 @@ def run_single_policy(
         remaining_budget = max(0.0, remaining_budget - tx_cost)
 
         t2_dec = time.perf_counter()
-        try:
-            policy.update(arm_idx, vec, rew, cost=tx_cost)
-        except TypeError:
-            policy.update(arm_idx, vec, rew)
+        policy.update(arm_idx, vec, rew, cost=tx_cost)
         t3_dec = time.perf_counter()
 
         overhead_ms = ((t1_dec - t0_dec) + (t3_dec - t2_dec)) * 1000.0

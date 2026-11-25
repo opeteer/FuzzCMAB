@@ -166,12 +166,143 @@ def plot_capital_survival_comparison(
     return out_path
 
 
+def plot_dynamic_regret_trajectory(
+    telemetry_data: Dict[str, Any],
+    save_path: Optional[Path] = None,
+) -> Path:
+    """
+    Plot trajektori Cumulative Dynamic Regret D-Regret(t) untuk 5 kebijakan (Metrik 1 - Persamaan 3.22).
+    """
+    out_path = save_path or (FIGURES_DIR / "fig_dynamic_regret_comparison.png")
+    exps = telemetry_data.get("experiments", [])
+    if not exps:
+        raise ValueError("Data eksperimen kosong.")
+
+    # Pilih eksperimen representatif (prioritaskan volatile_spikes / moderate atau loose)
+    candidates = [
+        e for e in exps
+        if e.get("gas_regime") == "volatile_spikes" and e.get("budget_tier") in ("moderate", "loose")
+    ]
+    exp = candidates[0] if candidates else exps[0]
+    results = exp["results"]
+
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    for pol_name in ["UniformRandom", "LinUCB", "D-LinUCB", "LinCBwK", "D-LinCBwK"]:
+        if pol_name in results:
+            traj = results[pol_name].get("dynamic_regret_trajectory", [])
+            if traj:
+                rds = list(range(1, len(traj) + 1))
+                ax.plot(
+                    rds,
+                    traj,
+                    label=f"{POLICY_LABELS[pol_name]} (Final: {traj[-1]:.2f})",
+                    color=POLICY_COLORS[pol_name],
+                    linestyle="-" if pol_name == "D-LinCBwK" else "--",
+                )
+
+    ax.set_xlabel("Putaran Transaksi (t)")
+    ax.set_ylabel("Cumulative Dynamic Regret D-Regret(t)")
+    ax.set_title(
+        f"Trajektori Cumulative Dynamic Regret - {exp['contract_name']} "
+        f"({exp['gas_regime']}, {exp['budget_tier']})"
+    )
+    ax.legend(loc="upper left", framealpha=0.9)
+    ax.grid(True)
+
+    plt.tight_layout()
+    fig.savefig(out_path, dpi=300)
+    fig.savefig(out_path.with_suffix(".pdf"), dpi=300)
+    plt.close(fig)
+    return out_path
+
+
+def plot_efficiency_and_vulnerability_summary(
+    telemetry_data: Dict[str, Any],
+    save_path: Optional[Path] = None,
+) -> Path:
+    """
+    Plot perbandingan rata-rata Gas Efficiency Ratio (Eff_gas) dan Frekuensi Pemicuan Kerentanan (E4)
+    di seluruh kasus eksperimen dalam berkas telemetri (Metrik 2 & Metrik 3).
+    """
+    out_path = save_path or (FIGURES_DIR / "fig_gas_efficiency_and_vuln.png")
+    exps = telemetry_data.get("experiments", [])
+    if not exps:
+        raise ValueError("Data eksperimen kosong.")
+
+    pol_order = ["UniformRandom", "LinUCB", "D-LinUCB", "LinCBwK", "D-LinCBwK"]
+    mean_eff: List[float] = []
+    total_vuln: List[int] = []
+
+    for pol in pol_order:
+        eff_vals = [
+            float(e["results"][pol]["gas_efficiency_ratio"])
+            for e in exps if pol in e.get("results", {})
+        ]
+        vuln_vals = [
+            int(e["results"][pol].get("vuln_trigger_count", 0))
+            for e in exps if pol in e.get("results", {})
+        ]
+        mean_eff.append(float(np.mean(eff_vals)) if eff_vals else 0.0)
+        total_vuln.append(int(np.sum(vuln_vals)) if vuln_vals else 0)
+
+    colors = [POLICY_COLORS[p] for p in pol_order]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.8))
+
+    bars1 = ax1.bar(pol_order, mean_eff, color=colors, edgecolor="black", alpha=0.88)
+    ax1.set_ylabel(r"Rata-rata Efisiensi Gas ($\mathrm{Eff}_{\mathrm{gas}}$)")
+    ax1.set_title("Rasio Efisiensi Penggunaan Anggaran Gas")
+    ax1.tick_params(axis="x", rotation=18)
+    ax1.grid(axis="y")
+    for b in bars1:
+        h = b.get_height()
+        ax1.annotate(
+            f"{h:.1f}",
+            xy=(b.get_x() + b.get_width() / 2, h),
+            xytext=(0, 3),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+
+    bars2 = ax2.bar(pol_order, total_vuln, color=colors, edgecolor="black", alpha=0.88)
+    ax2.set_ylabel("Total Pemicuan Kerentanan (E4)")
+    ax2.set_title("Akumulasi Penemuan Kerentanan Kritis (E4)")
+    ax2.tick_params(axis="x", rotation=18)
+    ax2.grid(axis="y")
+    for b in bars2:
+        h = b.get_height()
+        ax2.annotate(
+            f"{int(h)}",
+            xy=(b.get_x() + b.get_width() / 2, h),
+            xytext=(0, 3),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+
+    plt.tight_layout()
+    fig.savefig(out_path, dpi=300)
+    fig.savefig(out_path.with_suffix(".pdf"), dpi=300)
+    plt.close(fig)
+    return out_path
+
+
 def generate_all_skripsi_figures(telemetry_file: Optional[Path] = None) -> List[Path]:
-    """Menghasilkan seluruh paket figur publikasi dari hasil telemetri skripsi."""
+    """Menghasilkan seluruh 4 paket figur publikasi dari hasil telemetri skripsi."""
     data = load_latest_telemetry(telemetry_file)
     generated: List[Path] = []
 
-    # 1. Plot Survival Trajectory
+    # 1. Plot Dynamic Regret Trajectory
+    try:
+        p0 = plot_dynamic_regret_trajectory(data)
+        generated.append(p0)
+        print(f"[+] Figur tersimpan: {p0}")
+    except Exception as e:
+        print(f"[!] Gagal membuat figur dynamic regret: {e}")
+
+    # 2. Plot Survival Trajectory
     try:
         p1 = plot_capital_survival_comparison(data)
         generated.append(p1)
@@ -179,7 +310,7 @@ def generate_all_skripsi_figures(telemetry_file: Optional[Path] = None) -> List[
     except Exception as e:
         print(f"[!] Gagal membuat figur survival: {e}")
 
-    # 2. Plot Gas Spike Adaptation
+    # 3. Plot Gas Spike Adaptation
     try:
         volatile_exps = [e for e in data.get("experiments", []) if e.get("gas_regime") == "volatile_spikes"]
         target_exp = volatile_exps[0] if volatile_exps else data.get("experiments", [])[0]
@@ -188,6 +319,14 @@ def generate_all_skripsi_figures(telemetry_file: Optional[Path] = None) -> List[
         print(f"[+] Figur tersimpan: {p2}")
     except Exception as e:
         print(f"[!] Gagal membuat figur gas spike: {e}")
+
+    # 4. Plot Gas Efficiency & Vulnerability Summary
+    try:
+        p3 = plot_efficiency_and_vulnerability_summary(data)
+        generated.append(p3)
+        print(f"[+] Figur tersimpan: {p3}")
+    except Exception as e:
+        print(f"[!] Gagal membuat figur efisiensi & kerentanan: {e}")
 
     return generated
 

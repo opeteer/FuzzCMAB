@@ -4,11 +4,11 @@ Placed outside agent-specific folders (`Agen_<Spesifikasi>/`) inside `cmab_anvil
 """
 
 from .anvil_rpc import UnprivilegedAnvilClient
-from .base_env import BaseArmSpec, BaseUnprivilegedBanditEnv, StepTransition
+from .base_env import Arm, BaseUnprivilegedBanditEnv, StepTransition
 
 __all__ = [
     "UnprivilegedAnvilClient",
-    "BaseArmSpec",
+    "Arm",
     "BaseUnprivilegedBanditEnv",
     "StepTransition",
 ]

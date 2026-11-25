@@ -21,7 +21,7 @@ from ..algorithms.linucb_knapsack import StationaryLinCBwK
 from ..algorithms.discounted_linucb_knapsack import DiscountedLinCBwK
 from ..algorithms.uniform_random import UniformRandomPolicy
 from ..common.anvil_rpc import UnprivilegedAnvilClient
-from ..common.base_env import BaseArmSpec, BaseUnprivilegedBanditEnv, StepTransition
+from ..common.base_env import Arm, BaseUnprivilegedBanditEnv, StepTransition
 
 from .context import (
     OnChainContextSnapshot,
@@ -276,7 +276,7 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
                     pass
         return 45000 if tx_ok else 28000
 
-    def execute_arm(self, arm: BaseArmSpec) -> Tuple[bool, str]:
+    def execute_arm(self, arm: Arm) -> Tuple[bool, str]:
         target_addr = (
             self.vault_address
             if arm.target_contract == "VulnerableVault"
@@ -555,19 +555,12 @@ class VaultCustodyCMABAgent:
         transition = self.env.step(selection.arm_id, prev_context=(context_vec, prev_snap))
 
         reward = transition.reward_breakdown.total_reward
-        try:
-            self.policy.update(
-                arm_id=selection.arm_id,
-                context=context_vec,
-                reward=reward,
-                cost=transition.tx_cost_eth,
-            )
-        except TypeError:
-            self.policy.update(
-                arm_id=selection.arm_id,
-                context=context_vec,
-                reward=reward,
-            )
+        self.policy.update(
+            arm_id=selection.arm_id,
+            context=context_vec,
+            reward=reward,
+            cost=transition.tx_cost_eth,
+        )
 
         for anomaly in transition.reward_breakdown.detected_anomalies:
             self.discovered_vulnerabilities.append(

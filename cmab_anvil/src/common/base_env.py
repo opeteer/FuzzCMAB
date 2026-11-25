@@ -12,10 +12,8 @@ from .anvil_rpc import UnprivilegedAnvilClient
 
 
 @dataclass(frozen=True)
-class BaseArmSpec:
-    """
-    Universal specification of a discrete bandit arm representing an EOA transaction strategy.
-    """
+
+class Arm:
     arm_id: int
     name: str
     target_contract: str
@@ -30,7 +28,7 @@ class StepTransition:
     Universal record of a single CMAB interaction round t on Anvil.
     """
     round_idx: int
-    arm_spec: BaseArmSpec
+    arm_spec: Arm
     tx_succeeded: bool
     tx_hash_or_err: str
     prev_snapshot: Any
@@ -54,7 +52,7 @@ class BaseUnprivilegedBanditEnv(ABC):
     def __init__(
         self,
         rpc_client: UnprivilegedAnvilClient,
-        arms: List[BaseArmSpec],
+        arms: List[Arm],
         revert_window: int = 10,
     ):
         self.rpc_client = rpc_client
@@ -83,7 +81,7 @@ class BaseUnprivilegedBanditEnv(ABC):
         pass
 
     @abstractmethod
-    def execute_arm(self, arm: BaseArmSpec) -> Tuple[bool, str]:
+    def execute_arm(self, arm: Arm) -> Tuple[bool, str]:
         """Execute the chosen EOA transaction arm on Anvil."""
         pass
 

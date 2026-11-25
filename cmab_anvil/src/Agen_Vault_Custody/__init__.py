@@ -10,8 +10,18 @@ from .context import (
     FEATURE_NAMES,
 )
 from .arms import build_vault_custody_arm_catalog
-from .reward import BanditRewardBreakdown, VaultCustodyRewardOracle
-from .agent import VaultCustodyEnv, VaultCustodyCMABAgent
+from .reward import (
+    BanditRewardBreakdown,
+    VaultCustodyRewardOracle,
+    REWARD_SUPPORT_LEVELS,
+    REWARD_WEIGHT_VECTOR,
+)
+from .agent import (
+    VaultCustodyEnv,
+    VaultCustodyCMABAgent,
+    generate_vault_gas_series,
+    generate_external_party_events,
+)
 
 __all__ = [
     "OnChainContextSnapshot",
@@ -21,7 +31,11 @@ __all__ = [
     "build_vault_custody_arm_catalog",
     "BanditRewardBreakdown",
     "VaultCustodyRewardOracle",
+    "REWARD_SUPPORT_LEVELS",
+    "REWARD_WEIGHT_VECTOR",
     "VaultCustodyEnv",
     "VaultCustodyCMABAgent",
+    "generate_vault_gas_series",
+    "generate_external_party_events",
 ]
 

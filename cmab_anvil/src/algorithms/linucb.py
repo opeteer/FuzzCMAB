@@ -204,9 +204,16 @@ class LinUCBTemplate(BaseCMABPolicy):
             },
         )
 
-    def update(self, arm_id: int, context: np.ndarray, reward: float) -> None:
+    def update(
+        self,
+        arm_id: int,
+        context: np.ndarray,
+        reward: float,
+        cost: Optional[float] = None,
+    ) -> None:
         """
         Update linear ridge regression sufficient statistics (A_a, b_a, theta_a) for chosen arm.
+        `cost` is accepted for polymorphic compatibility with Knapsack policies.
         """
         if not (0 <= arm_id < self.n_arms):
             raise ValueError(f"Invalid arm_id {arm_id}; expected 0 <= arm_id < {self.n_arms}.")

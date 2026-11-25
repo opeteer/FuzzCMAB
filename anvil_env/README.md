@@ -1,94 +1,77 @@
-# Lingkungan Simulator Anvil untuk FuzzCMAB
+# Lingkungan Simulator Anvil untuk FuzzCMAB (`anvil_env`)
 
-Lingkungan ini mengintegrasikan node **Anvil (Foundry)** sebagai simulator state dan penyedia *initial state* / forking on-chain untuk fuzzer pintar **FuzzCMAB (Contextual Multi-Armed Bandit guided fuzzer)**.
-
----
-
-## 🏛️ Arsitektur Integrasi
-
-```
-+-------------------------------------------------------------+
-|                     ANVIL LOCAL SIMULATOR                   |
-|  - JSON-RPC Endpoint: http://127.0.0.1:8545                |
-|  - Chain ID: 31337 (atau forking mainnet block tertentu)   |
-|  - Deployed: VulnerableVault (10 ETH) & MockToken          |
-+-------------------------------------------------------------+
-                              ▲
-                              │ Lazy Storage Fetching
-                              │ (eth_getStorageAt, eth_getCode)
-+-----------------------------┴-------------------------------+
-|                    FUZZCMAB CORE ENGINE                     |
-|  - REVM in-memory execution (No Gas Limit, Fast In-RAM)     |
-|  - DQN Agent: 28-dim state -> 16 macro actions -> 8-digits   |
-|  - LibAFL Mutator: ABI, Caller, CallValue, Reentrancy       |
-|  - Oracles: Selfdestruct, Reentrancy, Invariants            |
-+-------------------------------------------------------------+
-                              │
-                              ▼
-           Auto-Generated Exploit PoC (Foundry .t.sol)
-```
+Direktori `anvil_env/` menyediakan lingkungan eksekusi **Anvil (Foundry)** lokal beserta kontrak uji kustodian (`VulnerableVault.sol` dan `MockToken.sol`) serta skrip otomasi penyiapan kedudukan **Pengguna Tanpa Hak Istimewa (*Zero-Privilege EOA Standing*)** untuk agen **FuzzCMAB**.
 
 ---
 
-## 📁 Struktur Direktori
+## 1. Arsitektur Interaksi On-Chain
 
+```text
++-------------------------------------------------------------------+
+|                   ANVIL LOCAL EVM SIMULATOR                       |
+|  - JSON-RPC Endpoint : http://127.0.0.1:8545 (Chain ID: 31337)    |
+|  - Flag Tracing      : --steps-tracing (debug_traceTransaction)   |
+|  - Account #0 (Owner): 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 |
+|  - Account #1 (Peer) : 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 |
+|  - Account #2 (Agent): 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC |
++-------------------------------------------------------------------+
+                                 ▲
+                                 │ 1. Read-Only Queries & Opcode Trace
+                                 │    (eth_getBalance, eth_getStorageAt,
+                                 │     eth_call, debug_traceTransaction)
+                                 │ 2. Signed Unprivileged EOA Transactions
+                                 │    (cast send --private-key AGENT_PK)
++--------------------------------┴----------------------------------+
+|                     FUZZCMAB PYTHON ENGINE                        |
+|  - PublicContextExtractor : Snapshot EVM -> x_t in R^10           |
+|  - D-LinCBwK Policy       : argmax_a [r_hat(x_t) - lambda_t*c_hat]|
+|  - VaultCustodyRewardOracle: Evaluasi Transisi E0..E4 in [0, 1]   |
++-------------------------------------------------------------------+
 ```
+
+---
+
+## 2. Struktur Direktori
+
+```text
 anvil_env/
-├── foundry.toml             # Konfigurasi Foundry untuk Anvil & FuzzCMAB
+├── README.md                        # Dokumentasi lingkungan simulator Anvil
+├── foundry.toml                     # Konfigurasi kompilator Solidity Foundry
+├── deployed_addresses.json          # Alamat kontrak hasil deployment aktif di Anvil
 ├── src/
-│   ├── VulnerableVault.sol  # Kontrak uji dengan bug Reentrancy, Solvency Invariant, & Selfdestruct
-│   └── MockToken.sol        # Token ERC20 mock untuk pengujian aset
+│   ├── VulnerableVault.sol          # Kontrak tolok ukur Vault Custody (solvency & emergencyWithdraw bug)
+│   └── MockToken.sol                # Kontrak token ERC-20 pendamping
 ├── script/
-│   └── Deploy.s.sol         # Skrip otomatis deploy ke Anvil & inisialisasi dana 10 ETH
+│   └── Deploy.s.sol                 # Skrip deployment Foundry (Account #0 sebagai Owner)
 ├── test/
-│   └── VaultTest.t.sol      # Unit test Foundry standar
+│   └── VaultTest.t.sol              # Pengujian unit Foundry untuk VulnerableVault
 ├── scripts/
-│   ├── start_anvil.sh       # Menjalankan Anvil di background & memantau health RPC
-│   ├── stop_anvil.sh        # Menghentikan proses Anvil
-│   ├── deploy_contracts.sh  # Menjalankan forge script deploy ke Anvil
-│   ├── export_artifacts.py  # Ekspor artefak ABI/BIN & konfigurasi untuk FuzzCMAB
-│   └── run_anvil_simulation.sh # Otomasi 1-klik untuk seluruh pipeline
-└── fuzz_artifacts/          # Artefak (.abi, .bin, builder_artifacts.json) siap pakai
+│   ├── start_anvil.sh               # Menjalankan proses Anvil standar di port 8545
+│   ├── start_anvil_fair.sh          # Menjalankan Anvil dengan parameter eksperimen terkontrol
+│   ├── stop_anvil.sh                # Menghentikan proses Anvil yang sedang berjalan
+│   ├── deploy_contracts.sh          # Men-deploy VulnerableVault & MockToken via forge script
+│   ├── setup_fair_agent.sh          # Memverifikasi bahwa Agen BUKAN owner & mengekspor artefak ABI
+│   ├── export_artifacts.py          # Mengekstrak ABI & bytecode hasil kompilasi Foundry
+│   ├── run_fair_simulation.sh       # Pipeline 1-klik: start_anvil_fair.sh + setup_fair_agent.sh
+│   └── run_anvil_simulation.sh      # Pipeline 1-klik: start_anvil.sh + deploy + export_artifacts
+└── fuzz_artifacts/                  # Artefak ABI & BIN hasil ekstraksi
 ```
 
 ---
 
-## 🚀 Cara Penggunaan
+## 3. Cara Penggunaan
 
-### 1. Menjalankan 1-Klik (Otomatis)
-Untuk menjalankan simulator Anvil, men-deploy kontrak, dan menyiapkan seluruh artefak:
+### A. Menyiapkan Lingkungan Anvil Mode Adil (*Strict Fair Standing*)
 ```bash
-./anvil_env/scripts/run_anvil_simulation.sh
+bash anvil_env/scripts/run_fair_simulation.sh
 ```
+Skrip ini akan:
+1. Menjalankan node Anvil di `http://127.0.0.1:8545`.
+2. Men-deploy `VulnerableVault` (didanai 10 ETH awal oleh Account #0 / Owner) dan `MockToken`.
+3. Memverifikasi secara on-chain bahwa alamat EOA agen bukan `owner()` dari `VulnerableVault`.
+4. Menyimpan alamat kontrak ke `anvil_env/deployed_addresses.json`.
 
-### 2. Menghentikan Simulator Anvil
+### B. Menghentikan Node Anvil
 ```bash
-./anvil_env/scripts/stop_anvil.sh
+bash anvil_env/scripts/stop_anvil.sh
 ```
-
-### 3. Menjalankan Fuzzing dengan FuzzCMAB
-
-#### Pilihan A: Mode On-Chain Fork (Memfuzing kontrak yang aktif di Anvil)
-```bash
-cargo run --release --bin ityfuzz -- evm \
-    -t "$(cat anvil_env/deployed_addresses.json | jq -r .VulnerableVault)" \
-    -u http://127.0.0.1:8545 \
-    -i 31337 \
-    --chain-type local \
-    --builder-artifacts-file anvil_env/fuzz_artifacts/builder_artifacts.json
-```
-
-#### Pilihan B: Mode Standalone Fuzzing (Menggunakan ABI & Deployed Bytecode)
-```bash
-cargo run --release --bin ityfuzz -- evm -t "anvil_env/fuzz_artifacts/*"
-```
-
----
-
-## 🌐 Simulasi dengan Forking Jaringan Nyata (Mainnet / Arbitrum / BSC)
-
-Jika Anda ingin menguji kontrak yang bergantung pada protokol DeFi on-chain nyata (misalnya Uniswap, Aave, Curve), cukup jalankan `start_anvil.sh` dengan parameter RPC URL:
-```bash
-./anvil_env/scripts/start_anvil.sh 8545 "https://eth.llamarpc.com"
-```
-Anvil akan menyalin seluruh state mainnet pada blok terbaru, dan FuzzCMAB dapat langsung memfuzing kontrak di atas state mainnet tersebut!
