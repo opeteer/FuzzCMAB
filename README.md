@@ -33,7 +33,114 @@ Pada setiap putaran interaksi diskrit $t \in \{1, 2, \dots, T\}$:
 
 ---
 
-## 2. Struktur Direktori Proyek
+## 2. Diagram Arsitektur & Alur Kerja Simulasi (Lengkap dengan Pemetaan Source Code)
+
+### A. Peta Arsitektur & Pemanggilan Source Code (*End-to-End Call Graph*)
+
+```mermaid
+flowchart TD
+    subgraph L1["1. Orkestrasi & Konfigurasi Eksperimen"]
+        CFG["experiments_skripsi/config.py (BUDGET_TIERS, ALPHA=0.55, GAMMA=0.82)"]
+        CAT["experiments_skripsi/contract_catalog.py (CATALOG_CONTRACTS: B01, S01..D03)"]
+        RUN["experiments_skripsi/runner.py (run_experiment_matrix, run_single_policy)"]
+        SIM["tests/run_cmab_simulation.py & run_comparative_experiment.py"]
+    end
+
+    subgraph L2["2. Inisialisasi Kontrak & Dinamika Non-Stasioner (CRN)"]
+        SETUP["runner.py:setup_member_environment / setup_fair_agent.sh (Zero-Privilege Onboarding)"]
+        GAS["experiments_skripsi/gas_regimes.py:generate_gas_series (Stable vs Volatile Spikes)"]
+        PEER["runner.py:execute_network_event / agent.py:simulate_external_party_event (PEER_PK Tx)"]
+    end
+
+    subgraph L3["3. Observasi State EVM & Ekstraksi Konteks 10D"]
+        RPC_READ["src/common/anvil_rpc.py:UnprivilegedAnvilClient (query_total_deposited, query_agent_stake, infer_mapping_balance_from_storage)"]
+        SNAP["src/Agen_Vault_Custody/context.py:OnChainContextSnapshot"]
+        CTX["src/Agen_Vault_Custody/context.py:PublicContextExtractor.to_vector (x_t in R^10)"]
+    end
+
+    subgraph L4["4. Mesin Keputusan Bandit (src/algorithms/)"]
+        DLIN["discounted_linucb_knapsack.py:DiscountedLinCBwK (estimate_reward, estimate_cost, select_arm)"]
+        BASE["linucb_knapsack.py | discounted_linucb.py | linucb.py | uniform_random.py"]
+    end
+
+    subgraph L5["5. Eksekusi Transaksi EOA & Pelacakan Dataflow EVM"]
+        ARM["src/common/base_env.py:Arm & src/Agen_Vault_Custody/arms.py"]
+        EXEC["agent.py:execute_arm / runner.py:execute_member_arm -> send_eoa_transaction (cast send)"]
+        TRACE["anvil_rpc.py:trace_transaction_dataflow (debug_traceTransaction SLOAD/SSTORE + storage diff -> x6, x7)"]
+        ANVIL["Node Simulator Anvil EVM (Port 8545, --steps-tracing, Cancun EVM)"]
+    end
+
+    subgraph L6["6. Orakel Imbalan, Dinamika Knapsack, & Evaluasi"]
+        LIAB["runner.py:update_legitimate_liabilities_before_post_snapshot & reanchor_post_vulnerability_state"]
+        REW["src/Agen_Vault_Custody/reward.py:VaultCustodyRewardOracle.compute_reward (Partisi E0..E4)"]
+        UPD["DiscountedLinCBwK.update (Update Matriks A_t, theta_t, psi_t, Dual lambda_t, Budget B_t)"]
+        EVAL["src/algorithms/dynamic_regret.py:compare_policies_dynamic_regret & generate_plots.py"]
+    end
+
+    CFG --> RUN
+    CAT --> RUN
+    RUN --> SETUP
+    SIM --> SETUP
+    SETUP --> GAS
+    GAS --> PEER
+    PEER --> RPC_READ
+    RPC_READ --> SNAP
+    SNAP --> CTX
+    CTX --> DLIN
+    CTX --> BASE
+    DLIN --> ARM
+    BASE --> ARM
+    ARM --> EXEC
+    EXEC --> ANVIL
+    ANVIL --> TRACE
+    TRACE --> LIAB
+    LIAB --> REW
+    REW --> UPD
+    UPD --> EVAL
+```
+
+### B. Siklus Eksekusi Putaran Demi Putaran ($t = 1, \dots, T$)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Runner as runner.py / agent.py
+    participant Anvil as Anvil EVM (Port 8545)
+    participant RPC as anvil_rpc.py (UnprivilegedAnvilClient)
+    participant Context as context.py (PublicContextExtractor)
+    participant Policy as discounted_linucb_knapsack.py (D-LinCBwK)
+    participant Oracle as reward.py (VaultCustodyRewardOracle)
+
+    Note over Runner,Policy: Awal Putaran t: Cek Kebangkrutan (remaining_budget <= B_min)
+    Runner->>Anvil: Set BaseFee g_t (anvil_setNextBlockBaseFeePerGas)
+    Runner->>Anvil: Eksekusi Transaksi Pihak Luar (PEER_PK deposit / withdraw / transfer)
+    Runner->>RPC: Baca Saldo, Liabilitas 4-Tier, & Status Bytecode
+    RPC->>Anvil: eth_getBalance, eth_call, eth_getStorageAt, eth_getCode
+    RPC-->>Context: OnChainContextSnapshot (prev_snap)
+    Context-->>Runner: Vektor Konteks Ternormalisasi x_t in R^10
+    Runner->>Policy: select_arm(x_t)
+    Note over Policy: Hitung UCB Reward r_hat(x_t), Prediksi Biaya c_hat(x_t), Pilih a_t = argmax_a [r_hat - lambda_t * c_hat]
+    Policy-->>Runner: ArmSelectionResult (arm_id = a_t)
+    Runner->>RPC: snapshot_contract_storage(target_addr)
+    Runner->>RPC: send_eoa_transaction(Arm a_t, --value v_a, --gas-price g_t, --private-key AGENT_PK)
+    RPC->>Anvil: Broadcast Transaksi EOA Tanpa Hak Istimewa
+    Anvil-->>RPC: Receipt Transaksi (tx_ok, tx_hash, gasUsed)
+    Runner->>RPC: trace_transaction_dataflow(tx_hash, pre_storage)
+    RPC->>Anvil: debug_traceTransaction (structLogs SLOAD/SSTORE) / Storage Diff
+    RPC-->>Runner: Sinyal Dataflow (x6_sstore_flag, x7_waypoint_flag)
+    Runner->>Runner: update_legitimate_liabilities_before_post_snapshot()
+    Runner->>Context: Observasi State Pasca-Transaksi (next_snap)
+    Runner->>Oracle: compute_reward(prev_snap, next_snap, tx_ok, a_t)
+    Oracle-->>Runner: BanditRewardBreakdown (r_t in {0.0, 0.2, 0.5, 0.7, 1.0}, Partisi E0..E4)
+    Runner->>Runner: Hitung Biaya c_t(a_t) = clip(GasUsed * g_t + v_a) & Sisa Anggaran B_t = max(0, B_{t-1} - c_t)
+    Runner->>Runner: reanchor_post_vulnerability_state() (jika E4 terpicu)
+    Runner->>Policy: update(a_t, x_t, reward=r_t, cost=c_t)
+    Note over Policy: Diskon Kovariansi A_{t+1} = gamma*A_t + x_t*x_t^T + (1-gamma)*lambda_reg*I, Update Bobot theta, psi, & Proyeksi Dual lambda_{t+1}
+```
+
+---
+
+## 3. Struktur Direktori Proyek
 
 ```text
 FuzzCMAB/
