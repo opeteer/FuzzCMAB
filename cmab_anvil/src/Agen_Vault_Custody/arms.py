@@ -1,7 +1,7 @@
 """
 Action / Arm Space (A_Vault = {0, ..., 7}) for Agen_Vault_Custody.
 
-Every arm is a strictly valid user-level transaction signed by the unprivileged
+Every arm is a strictly valid user-level transaction signed by the regular user
 agent's EOA private key targeting `VulnerableVault` or `MockToken`.
 Function names and signatures are aligned with the empirical distribution
 of SC-Bench contracts in the `Vault_and_Liquidity` category.

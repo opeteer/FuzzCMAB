@@ -1,6 +1,6 @@
 """
 FuzzCMAB: Contextual Multi-Armed Bandits with Knapsacks (D-LinCBwK) Framework
-for Unprivileged Smart Contract Vulnerability Fuzzing on Anvil.
+for Regular User Smart Contract Vulnerability Fuzzing on Anvil.
 
 Directory Structure:
   - `src/`                 : Core algorithms, RPC client, and `Agen_Vault_Custody` domain agent
@@ -33,9 +33,9 @@ from .src.algorithms import (
     compare_policies_dynamic_regret,
 )
 from .src.common import (
-    UnprivilegedAnvilClient,
+    RegularUserAnvilClient,
     Arm,
-    BaseUnprivilegedBanditEnv,
+    BaseRegularUserBanditEnv,
     StepTransition,
 )
 from .src.Agen_Vault_Custody import (
@@ -78,9 +78,9 @@ __all__ = [
     "DynamicRegretStep",
     "DynamicRegretSummary",
     "compare_policies_dynamic_regret",
-    "UnprivilegedAnvilClient",
+    "RegularUserAnvilClient",
     "Arm",
-    "BaseUnprivilegedBanditEnv",
+    "BaseRegularUserBanditEnv",
     "StepTransition",
     "OnChainContextSnapshot",
     "PublicContextExtractor",

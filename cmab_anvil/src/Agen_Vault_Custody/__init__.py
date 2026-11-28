@@ -1,5 +1,5 @@
 """
-Agen_Vault_Custody: Specialized Unprivileged CMAB Agent for Custody Vault & ERC-20 Contracts
+Agen_Vault_Custody: Specialized Regular User CMAB Agent (Agen Pengguna Biasa) for Custody Vault & ERC-20 Contracts
 (`VulnerableVault.sol` and `MockToken.sol`) on the Anvil Simulator.
 """
 

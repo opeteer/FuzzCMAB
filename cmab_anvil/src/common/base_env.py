@@ -1,5 +1,5 @@
 """
-Universal Base Environment and Data Structures for Unprivileged CMAB Agents on Anvil.
+Universal Base Environment and Data Structures for Regular User CMAB Agents (Agen Pengguna Biasa) on Anvil.
 """
 
 from abc import ABC, abstractmethod
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Deque, Dict, List, Tuple
 import numpy as np
 
-from .anvil_rpc import UnprivilegedAnvilClient
+from .anvil_rpc import RegularUserAnvilClient
 
 
 @dataclass(frozen=True)
@@ -43,15 +43,15 @@ class StepTransition:
     external_event: str = "none"
 
 
-class BaseUnprivilegedBanditEnv(ABC):
+class BaseRegularUserBanditEnv(ABC):
     """
-    Abstract base class for unprivileged CMAB environments on Anvil.
+    Abstract base class for regular user CMAB environments (agen pengguna biasa) on Anvil.
     Provides shared RPC client management, revert rate tracking, and step loop structure.
     """
 
     def __init__(
         self,
-        rpc_client: UnprivilegedAnvilClient,
+        rpc_client: RegularUserAnvilClient,
         arms: List[Arm],
         revert_window: int = 10,
     ):
@@ -71,8 +71,8 @@ class BaseUnprivilegedBanditEnv(ABC):
         return float(sum(self.recent_reverts)) / len(self.recent_reverts)
 
     @abstractmethod
-    def verify_unprivileged_standing(self) -> Dict[str, str]:
-        """Verify that the agent holds no administrative privileges on target contracts."""
+    def verify_regular_user_standing(self) -> Dict[str, str]:
+        """Verify that the agent acts strictly as a regular user (pengguna biasa) on target contracts."""
         pass
 
     @abstractmethod

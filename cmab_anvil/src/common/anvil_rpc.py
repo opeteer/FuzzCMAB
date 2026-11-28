@@ -1,7 +1,7 @@
 """
-Universal Unprivileged JSON-RPC / Cast Client for the Anvil Simulator.
+Universal Regular User JSON-RPC / Cast Client for the Anvil Simulator.
 
-Enforces the Zero-Privilege User Model across any CMAB Agent:
+Enforces the Regular User Agent Model (Agen Pengguna Biasa) across any CMAB Agent:
   1. Uses an ordinary Externally Owned Account (EOA) identity (`AGENT_ADDR`).
   2. Cryptographically and on-chain verifies that `AGENT_ADDR` is NOT the contract owner.
   3. Prohibits calling any privileged state-mutating `anvil_*`, `evm_*`, or `hardhat_*` cheatcode methods.
@@ -94,9 +94,9 @@ def compute_solidity_mapping_slot(user_address: str, mapping_base_slot: int) -> 
     return "0x" + keccak256_bytes(encoded).hex()
 
 
-class UnprivilegedAnvilClient:
+class RegularUserAnvilClient:
     """
-    Universal RPC client for interacting with Anvil strictly as a normal EOA user,
+    Universal RPC client for interacting with Anvil strictly as a regular user agent (agen pengguna biasa),
     equipped with 4-Tiered ABI Resolution (Multi-ABI Probing, Dynamic ABI Introspection,
     Keccak256 Mapping Slot Inference) and Hybrid EVM `SLOAD`/`SSTORE` trace analysis.
     """
@@ -108,7 +108,7 @@ class UnprivilegedAnvilClient:
     PEER_USER_ADDR: str = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
     PEER_USER_PK: str = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
 
-    # Anvil Account #2: Unprivileged Intelligent CMAB Agent
+    # Anvil Account #2: Regular User CMAB Agent (Agen Pengguna Biasa)
     DEFAULT_AGENT_ADDR: str = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
     DEFAULT_AGENT_PK: str = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
 
@@ -172,7 +172,7 @@ class UnprivilegedAnvilClient:
         for forbidden in self.FORBIDDEN_RPC_PREFIXES:
             if method.startswith(forbidden):
                 raise PermissionError(
-                    f"Zero-Privilege Violation: Forbidden state-mutating cheatcode '{method}' blocked!"
+                    f"Regular User Standing Violation: Forbidden state-mutating cheatcode '{method}' blocked!"
                 )
         payload = json.dumps(
             {"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
@@ -196,7 +196,7 @@ class UnprivilegedAnvilClient:
             for forbidden in self.FORBIDDEN_RPC_PREFIXES:
                 if token.startswith(forbidden):
                     raise PermissionError(
-                        f"Zero-Privilege Violation: Forbidden RPC cheatcode '{token}' blocked!"
+                        f"Regular User Standing Violation: Forbidden RPC cheatcode '{token}' blocked!"
                     )
 
         cmd = [str(self.cast_bin)] + args + ["--rpc-url", self.rpc_url]
@@ -470,7 +470,7 @@ class UnprivilegedAnvilClient:
         return 0.0
 
     # -------------------------------------------------------------------------
-    # Universal Zero-Privilege Verification
+    # Universal Regular User Verification (Verifikasi Agen Pengguna Biasa)
     # -------------------------------------------------------------------------
     def verify_not_owner(
         self,
@@ -498,7 +498,7 @@ class UnprivilegedAnvilClient:
             "agent_address": self.agent_address,
             "contract_address": contract_address,
             "contract_owner": contract_owner,
-            "standing": "STRICT_UNPRIVILEGED_EOA",
+            "standing": "REGULAR_USER_EOA",
         }
 
     # -------------------------------------------------------------------------

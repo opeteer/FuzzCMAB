@@ -54,7 +54,7 @@ from cmab_anvil.algorithms.linucb_knapsack import StationaryLinCBwK
 from cmab_anvil.algorithms.discounted_linucb_knapsack import DiscountedLinCBwK
 from cmab_anvil.algorithms.dynamic_regret import compare_policies_dynamic_regret
 from cmab_anvil.common.anvil_rpc import (
-    UnprivilegedAnvilClient,
+    RegularUserAnvilClient,
     keccak256_bytes,
     compute_solidity_mapping_slot,
 )
@@ -251,7 +251,7 @@ def setup_member_environment(
     spec: Dict[str, Any],
     caddr: str,
     mock_token_addr: str,
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
 ) -> Dict[str, Any]:
     """
     Inisialisasi lingkungan kontrak sebelum horizon pengujian dimulai (Sub-bab 3.5 Tahap 1 & 2).
@@ -350,7 +350,7 @@ def setup_member_environment(
     }
 
 
-def get_escrow_balance(caddr: str, client: UnprivilegedAnvilClient) -> float:
+def get_escrow_balance(caddr: str, client: RegularUserAnvilClient) -> float:
     """Membaca saldo PullPayment escrow untuk M01 (DrawTT)."""
     return client.call_uint256_ether_with_fallbacks(
         caddr, ["payments(address)(uint256)"], DEPLOYER_ADDR
@@ -390,7 +390,7 @@ def execute_network_event(
     caddr: str,
     mock_token_addr: str,
     env_state: Dict[str, Any],
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
 ) -> None:
     """
     Mengeksekusi aktivitas pengguna eksternal (PEER_PK) dan pergeseran waktu blok secara murni
@@ -442,7 +442,7 @@ def execute_network_event(
 def build_context_vector(
     caddr: str,
     mock_token_addr: str,
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
     extractor: PublicContextExtractor,
     env_state: Dict[str, Any],
     recent_revert_rate: float,
@@ -553,7 +553,7 @@ def update_legitimate_liabilities_before_post_snapshot(
     tx_ok: bool,
     caddr: str,
     env_state: Dict[str, Any],
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
 ) -> None:
     """
     Memperbarui kewajiban simpanan sah L_{t+1}^(C) ketika transaksi setoran/staking normal berhasil,
@@ -611,7 +611,7 @@ def reanchor_post_vulnerability_state(
     spec: Dict[str, Any],
     caddr: str,
     env_state: Dict[str, Any],
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
     breakdown: BanditRewardBreakdown,
 ) -> None:
     """
@@ -694,7 +694,7 @@ def run_single_policy(
     if not caddr or not mock_token_addr:
         raise RuntimeError(f"Deploy failed for {spec['contract']}")
 
-    client = UnprivilegedAnvilClient(rpc_url=RPC_URL)
+    client = RegularUserAnvilClient(rpc_url=RPC_URL)
     if spec["contract"] in COMPILED_ABIS:
         client.register_contract_abi(caddr, COMPILED_ABIS[spec["contract"]])
 

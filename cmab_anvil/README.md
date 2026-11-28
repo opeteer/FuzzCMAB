@@ -1,6 +1,6 @@
 # Dokumentasi Teknis Paket `cmab_anvil` (FuzzCMAB)
 
-Paket `cmab_anvil` mengimplementasikan arsitektur **Discounted Linear Contextual Multi-Armed Bandits with Knapsacks (D-LinCBwK)** untuk pengujian keamanan (*fuzzing*) *smart contract* berbasis transaksi EOA tanpa hak istimewa di atas simulator lokal **Anvil (Foundry)**.
+Paket `cmab_anvil` mengimplementasikan arsitektur **Discounted Linear Contextual Multi-Armed Bandits with Knapsacks (D-LinCBwK)** untuk pengujian keamanan (*fuzzing*) *smart contract* berbasis transaksi EOA agen pengguna biasa di atas simulator lokal **Anvil (Foundry)**.
 
 ---
 
@@ -19,8 +19,8 @@ cmab_anvil/
 │   │   ├── uniform_random.py                 # UniformRandomPolicy (Baseline Forge Fuzz)
 │   │   └── dynamic_regret.py                 # DynamicRegretEvaluator & compare_policies_dynamic_regret
 │   ├── common/                               # Lapisan komunikasi RPC Anvil & abstraksi environment
-│   │   ├── anvil_rpc.py                      # UnprivilegedAnvilClient (Zero-Privilege + Hybrid Opcode Trace)
-│   │   └── base_env.py                       # Arm (@dataclass frozen), StepTransition, BaseUnprivilegedBanditEnv
+│   │   ├── anvil_rpc.py                      # RegularUserAnvilClient (Agen Pengguna Biasa + Hybrid Opcode Trace)
+│   │   └── base_env.py                       # Arm (@dataclass frozen), StepTransition, BaseRegularUserBanditEnv
 │   └── Agen_Vault_Custody/                   # Pemodelan domain kontrak Vault Custody
 │       ├── context.py                        # OnChainContextSnapshot & PublicContextExtractor (x_t in R^10)
 │       ├── arms.py                           # build_vault_custody_arm_catalog (K = 8 objek Arm)

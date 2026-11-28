@@ -23,9 +23,9 @@ from .algorithms import (
     compare_policies_dynamic_regret,
 )
 from .common import (
-    UnprivilegedAnvilClient,
+    RegularUserAnvilClient,
     Arm,
-    BaseUnprivilegedBanditEnv,
+    BaseRegularUserBanditEnv,
     StepTransition,
 )
 from .Agen_Vault_Custody import (
@@ -63,9 +63,9 @@ __all__ = [
     "DynamicRegretStep",
     "DynamicRegretSummary",
     "compare_policies_dynamic_regret",
-    "UnprivilegedAnvilClient",
+    "RegularUserAnvilClient",
     "Arm",
-    "BaseUnprivilegedBanditEnv",
+    "BaseRegularUserBanditEnv",
     "StepTransition",
     "OnChainContextSnapshot",
     "PublicContextExtractor",

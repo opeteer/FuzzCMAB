@@ -2,7 +2,7 @@
 
 **FuzzCMAB** adalah kerangka kerja penelitian *machine learning* berbasis **Discounted Linear Contextual Multi-Armed Bandits with Knapsacks (D-LinCBwK)** untuk eksplorasi transaksi sekuensial dan pendeteksian kerentanan pada *smart contract* Ethereum Virtual Machine (EVM) di atas simulator lokal **Anvil (Foundry)**.
 
-Seluruh interaksi dilakukan di bawah model keamanan **Pengguna Tanpa Hak Istimewa (*Zero-Privilege User Standing*)**: agen hanya bertindak sebagai akun pengguna biasa (*Externally Owned Account* / EOA) tanpa akses `owner`/admin, tanpa *cheatcode* manipulasi state (`anvil_impersonateAccount` dilarang), dan dibatasi oleh anggaran modal gas berhingga $B$.
+Seluruh interaksi dilakukan di bawah model keamanan **Agen Pengguna Biasa (*Regular User Agent Standing*)**: agen hanya bertindak sebagai akun pengguna biasa (*Externally Owned Account* / EOA) tanpa akses `owner`/admin, tanpa *cheatcode* manipulasi state (`anvil_impersonateAccount` dilarang), dan dibatasi oleh anggaran modal gas berhingga $B$.
 
 ---
 
@@ -80,7 +80,7 @@ flowchart TD
     end
 
     subgraph L3["3. Observasi State EVM dan Ekstraksi Konteks 10D"]
-        RPC_READ["src/common/anvil_rpc.py UnprivilegedAnvilClient (4-Tier ABI dan Keccak256 Storage)"]
+        RPC_READ["src/common/anvil_rpc.py RegularUserAnvilClient (4-Tier ABI dan Keccak256 Storage)"]
         SNAP["src/Agen_Vault_Custody/context.py OnChainContextSnapshot"]
         CTX["src/Agen_Vault_Custody/context.py PublicContextExtractor.to_vector (10D Context x_t)"]
     end
@@ -133,7 +133,7 @@ sequenceDiagram
     autonumber
     participant Runner as Runner (runner.py / agent.py)
     participant Anvil as Anvil EVM (Port 8545)
-    participant RPC as UnprivilegedAnvilClient (anvil_rpc.py)
+    participant RPC as RegularUserAnvilClient (anvil_rpc.py)
     participant Context as PublicContextExtractor (context.py)
     participant Policy as D-LinCBwK (discounted_linucb_knapsack.py)
     participant Oracle as VaultCustodyRewardOracle (reward.py)
@@ -150,7 +150,7 @@ sequenceDiagram
     Policy-->>Runner: ArmSelectionResult (arm_id = a_t)
     Runner->>RPC: snapshot_contract_storage(target_addr)
     Runner->>RPC: send_eoa_transaction(Arm a_t, value v_a, gas_price g_t, AGENT_PK)
-    RPC->>Anvil: Broadcast transaksi EOA tanpa hak istimewa via cast send
+    RPC->>Anvil: Broadcast transaksi EOA agen pengguna biasa via cast send
     Anvil-->>RPC: Receipt transaksi (tx_ok, tx_hash, gasUsed)
     Runner->>RPC: trace_transaction_dataflow(tx_hash, pre_storage)
     RPC->>Anvil: debug_traceTransaction (structLogs SLOAD dan SSTORE) serta Storage Diff
@@ -186,8 +186,8 @@ FuzzCMAB/
 │   │   │   ├── uniform_random.py                 # UniformRandomPolicy (Baseline Forge Fuzz)
 │   │   │   └── dynamic_regret.py                 # Evaluator Cumulative Dynamic Regret D-Regret(T)
 │   │   ├── common/                               # Komponen Universal RPC & Environment
-│   │   │   ├── anvil_rpc.py                      # UnprivilegedAnvilClient (Zero-Privilege + 4-Tier ABI/Storage + Opcode Trace)
-│   │   │   └── base_env.py                       # Kelas data Arm, StepTransition, & BaseUnprivilegedBanditEnv
+│   │   │   ├── anvil_rpc.py                      # RegularUserAnvilClient (Agen Pengguna Biasa + 4-Tier ABI/Storage + Opcode Trace)
+│   │   │   └── base_env.py                       # Kelas data Arm, StepTransition, & BaseRegularUserBanditEnv
 │   │   └── Agen_Vault_Custody/                   # Agen Spesialis Smart Contract Vault Custody
 │   │       ├── context.py                        # OnChainContextSnapshot & PublicContextExtractor (x_t in R^10)
 │   │       ├── arms.py                           # Katalog K = 8 objek Arm untuk VulnerableVault & MockToken
@@ -232,7 +232,7 @@ pytest cmab_anvil/tests/test_*.py -q
 ```
 
 ### C. Menjalankan Simulasi Mandiri `Agen_Vault_Custody`
-1. Siapkan node Anvil dan deploy kontrak `VulnerableVault` & `MockToken` dalam mode tanpa hak istimewa:
+1. Siapkan node Anvil dan deploy kontrak `VulnerableVault` & `MockToken` untuk agen pengguna biasa:
    ```bash
    bash anvil_env/scripts/run_fair_simulation.sh
    ```

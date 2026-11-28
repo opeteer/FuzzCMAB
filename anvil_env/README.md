@@ -1,6 +1,6 @@
 # Lingkungan Simulator Anvil untuk FuzzCMAB (`anvil_env`)
 
-Direktori `anvil_env/` menyediakan lingkungan eksekusi **Anvil (Foundry)** lokal beserta kontrak uji kustodian (`VulnerableVault.sol` dan `MockToken.sol`) serta skrip otomasi penyiapan kedudukan **Pengguna Tanpa Hak Istimewa (*Zero-Privilege EOA Standing*)** untuk agen **FuzzCMAB**.
+Direktori `anvil_env/` menyediakan lingkungan eksekusi **Anvil (Foundry)** lokal beserta kontrak uji kustodian (`VulnerableVault.sol` dan `MockToken.sol`) serta skrip otomasi penyiapan kedudukan **Agen Pengguna Biasa (*Regular User EOA Standing*)** untuk agen **FuzzCMAB**.
 
 ---
 
@@ -19,7 +19,7 @@ Direktori `anvil_env/` menyediakan lingkungan eksekusi **Anvil (Foundry)** lokal
                                  │ 1. Read-Only Queries & Opcode Trace
                                  │    (eth_getBalance, eth_getStorageAt,
                                  │     eth_call, debug_traceTransaction)
-                                 │ 2. Signed Unprivileged EOA Transactions
+                                 │ 2. Signed Regular User EOA Transactions
                                  │    (cast send --private-key AGENT_PK)
 +--------------------------------┴----------------------------------+
 |                     FUZZCMAB PYTHON ENGINE                        |

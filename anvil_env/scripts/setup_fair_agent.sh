@@ -31,7 +31,7 @@ AGENT_BAL=$("${CAST_BIN}" balance "${AGENT_ADDRESS}" --rpc-url "${RPC_URL}")
 echo "    - Alamat Agen: ${AGENT_ADDRESS}"
 echo "    - Saldo Modal Agen: $(python3 -c "print(int('${AGENT_BAL}') / 1e18)") ETH"
 
-# 3. Verifikasi ketiadaan hak istimewa (Privilege Verification)
+# 3. Verifikasi kedudukan agen pengguna biasa (Regular User Standing Verification)
 echo "[3] Memverifikasi batasan hak akses agen pada smart contract..."
 VAULT_OWNER=$("${CAST_BIN}" call "${VAULT_ADDRESS}" "owner()(address)" --rpc-url "${RPC_URL}")
 
@@ -40,7 +40,7 @@ if [ "${VAULT_OWNER,,}" == "${AGENT_ADDRESS,,}" ]; then
     exit 1
 else
     echo "    - Owner Kontrak Vault: ${VAULT_OWNER} (Terverifikasi BUKAN agen)"
-    echo "    - Status Agen: Pengguna Publik Biasa (Unprivileged User)"
+    echo "    - Status Agen: Agen Pengguna Biasa (Regular User Agent)"
 fi
 
 # 4. Export artifacts for FuzzCMAB

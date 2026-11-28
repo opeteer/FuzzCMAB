@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Universal Simulation Runner: Unprivileged Contextual Multi-Armed Bandit
+Universal Simulation Runner: Regular User Contextual Multi-Armed Bandit
 (LinUCB & Discounted LinUCB) running `Agen_Vault_Custody` on Anvil.
 """
 
@@ -35,7 +35,7 @@ from cmab_anvil.Agen_Vault_Custody import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run Unprivileged CMAB Simulation (LinUCB / Discounted LinUCB) on Anvil"
+        description="Run Regular User CMAB Simulation (LinUCB / Discounted LinUCB) on Anvil"
     )
     parser.add_argument(
         "--rpc-url",
@@ -140,9 +140,9 @@ def main() -> None:
         seed=42,
     )
 
-    # 1. Verify Strict Zero-Privilege Standing via Universal RPC Client
-    standing = env.verify_unprivileged_standing()
-    print("[*] Verifikasi Kedudukan Tanpa Hak Istimewa (Zero-Privilege Check):")
+    # 1. Verify Regular User Standing via Universal RPC Client
+    standing = env.verify_regular_user_standing()
+    print("[*] Verifikasi Kedudukan Agen Pengguna Biasa (Regular User Standing Check):")
     print(f"    - Spesifikasi Agen   : {standing['agent_name']}")
     print(f"    - Alamat EOA Agen    : {standing['agent_address']} (Pengguna Biasa)")
     print(f"    - Owner Kontrak Vault: {standing['vault_owner']} (Bukan Agen)")

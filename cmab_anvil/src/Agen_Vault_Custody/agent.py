@@ -20,8 +20,8 @@ from ..algorithms.discounted_linucb import DiscountedLinUCB
 from ..algorithms.linucb_knapsack import StationaryLinCBwK
 from ..algorithms.discounted_linucb_knapsack import DiscountedLinCBwK
 from ..algorithms.uniform_random import UniformRandomPolicy
-from ..common.anvil_rpc import UnprivilegedAnvilClient
-from ..common.base_env import Arm, BaseUnprivilegedBanditEnv, StepTransition
+from ..common.anvil_rpc import RegularUserAnvilClient
+from ..common.base_env import Arm, BaseRegularUserBanditEnv, StepTransition
 
 from .context import (
     OnChainContextSnapshot,
@@ -84,10 +84,10 @@ def generate_external_party_events(rounds: int, seed: int = 42) -> List[Dict[str
     return events
 
 
-class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
+class VaultCustodyEnv(BaseRegularUserBanditEnv):
     """
     Concrete CMAB environment for `Agen_Vault_Custody` interacting with
-    `VulnerableVault` and `MockToken` on Anvil without any special privileges,
+    `VulnerableVault` and `MockToken` on Anvil as a regular user agent (agen pengguna biasa),
     equipped with dynamic gas price regimes and external party transaction simulation.
     """
 
@@ -102,7 +102,7 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
         min_capital_threshold_eth: float = 0.005,
         seed: int = 42,
     ):
-        rpc_client = UnprivilegedAnvilClient(rpc_url=rpc_url)
+        rpc_client = RegularUserAnvilClient(rpc_url=rpc_url)
         arms = build_vault_custody_arm_catalog()
         super().__init__(rpc_client=rpc_client, arms=arms, revert_window=8)
 
@@ -174,7 +174,7 @@ class VaultCustodyEnv(BaseUnprivilegedBanditEnv):
             except Exception:
                 pass
 
-    def verify_unprivileged_standing(self) -> Dict[str, str]:
+    def verify_regular_user_standing(self) -> Dict[str, str]:
         info = self.rpc_client.verify_not_owner(
             contract_address=self.vault_address,
             owner_sig="owner()(address)",
@@ -546,7 +546,7 @@ class VaultCustodyCMABAgent:
           1. Prepare round gas price g_t (gas regime) & execute external party tx (if enabled)
           2. Observe public context vector x_t in R^{10}
           3. Select arm a_t using active policy
-          4. Broadcast unprivileged EOA transaction on Anvil & compute cost c_t(a_t)
+          4. Broadcast regular user EOA transaction on Anvil & compute cost c_t(a_t)
           5. Update policy parameters with observed (reward r_t, cost c_t(a_t))
         """
         self.env.prepare_round(self.env.round_counter + 1)

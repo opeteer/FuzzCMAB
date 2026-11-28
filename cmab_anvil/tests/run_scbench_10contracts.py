@@ -43,7 +43,7 @@ from cmab_anvil.algorithms.discounted_linucb import DiscountedLinUCB
 from cmab_anvil.algorithms.uniform_random import UniformRandomPolicy
 from cmab_anvil.algorithms.linucb_knapsack import StationaryLinCBwK
 from cmab_anvil.algorithms.discounted_linucb_knapsack import DiscountedLinCBwK
-from cmab_anvil.common.anvil_rpc import UnprivilegedAnvilClient
+from cmab_anvil.common.anvil_rpc import RegularUserAnvilClient
 from cmab_anvil.Agen_Vault_Custody.context import (
     PublicContextExtractor,
     OnChainContextSnapshot,
@@ -531,7 +531,7 @@ def execute_network_event(
     caddr: str,
     mock_token_addr: str,
     peer_state: Dict[str, float],
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
 ) -> None:
     ev_type = ev["type"]
     if ev_type == "peer_liquidity":
@@ -564,7 +564,7 @@ def execute_network_event(
 def build_context_vector(
     caddr: str,
     mock_token_addr: str,
-    client: UnprivilegedAnvilClient,
+    client: RegularUserAnvilClient,
     extractor: PublicContextExtractor,
     recent_revert_rate: float,
     round_idx: int,
@@ -680,7 +680,7 @@ def score_transition(
     elif role == "fallback_ops":
         reward += 0.15
 
-    # Bonus for unprivileged access control bypass (Security Finding)
+    # Bonus for regular user access control bypass (Security Finding)
     if role == "probe" or "unprotected" in arm["name"] or "public_withdraw" in arm["name"]:
         reward += 0.20
         anomalies.append(f"SECURITY FINDING: Member EOA executed sensitive function '{arm['name']}' ({arm['sig']})")
@@ -729,7 +729,7 @@ def run_policy_on_contract(
     peer_state: Dict[str, float] = {"deposited_eth": 0.50}
 
     # 3. Setup Initial Agent Capital for Scenario
-    client = UnprivilegedAnvilClient(rpc_url=RPC_URL)
+    client = RegularUserAnvilClient(rpc_url=RPC_URL)
     if spec["contract"] in COMPILED_ABIS:
         client.register_contract_abi(caddr, COMPILED_ABIS[spec["contract"]])
     starting_capital = initial_capital_eth if scenario == "capital" else 5.0
